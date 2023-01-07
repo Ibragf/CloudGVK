@@ -1,0 +1,17 @@
+.show-files {
+	padding: 20px;
+}
+
+/* ================= */
+/* Sort Files */
+/* ===================== */
+
+.head-show-files {
+	display: flex;
+	justify-content: space-between;
+}
+
+.name-section {
+	font-size: 1.6rem;
+	font-weight: 600;
+}
