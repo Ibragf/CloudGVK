@@ -19,9 +19,11 @@ namespace BackendGVK.Services
             _cache = cache;
             _jwtSettings = jwtSettings.Value;
         }
-        public async Task<bool> DeactiveTokensAsync(string access, string refresh, string expiration)
+        public async Task<bool> DeactiveTokensAsync(string access, string refresh)
         {
-            var utcValue = expiration;
+            var principal=GetClaimsPrincipal(access);
+            if (principal == null) return false;
+            var utcValue = principal.Claims.FirstOrDefault(x => x.Type=="exp")?.ToString();
             if (utcValue == null) return false;
 
             double utc;
@@ -76,6 +78,29 @@ namespace BackendGVK.Services
             DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             dateTime = dateTime.AddSeconds(unixTimeStamp).ToUniversalTime();
             return dateTime;
+        }
+
+        private ClaimsPrincipal GetClaimsPrincipal(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey)),
+                ValidateLifetime = false 
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return principal;
         }
     }
 }

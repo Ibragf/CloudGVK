@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel;
@@ -24,12 +25,14 @@ namespace BackendGVK.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JwtSettings _jwtSettings;
         private readonly ITokenManager _tokenManager;
+        private readonly AppDbContext _appDbContext;
         public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<JwtSettings> jwtSettings,
-            ITokenManager tokenManager) {
+            ITokenManager tokenManager, AppDbContext context) {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
             _tokenManager = tokenManager;
+            _appDbContext = context;
         }
 
         [HttpPost("register")]
@@ -64,7 +67,8 @@ namespace BackendGVK.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
-            string token;
+            string access;
+            string refresh;
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if(user==null)
@@ -83,7 +87,15 @@ namespace BackendGVK.Controllers
             if (result.Succeeded)
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                token = GetToken(claims);
+                access = _tokenManager.GenerateToken(claims);
+                refresh = _tokenManager.GenerateRefreshToken();
+                var refreshToken = new RefreshToken
+                {
+                    Id = refresh,
+                    exp = DateTime.Now.AddDays(30),
+                };
+                await _appDbContext.AddAsync(refreshToken);
+                await _appDbContext.SaveChangesAsync();
             }
             else
             {
@@ -91,15 +103,26 @@ namespace BackendGVK.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Ok(token);
+            return Ok(new TokensModel { AccessToken = access, RefreshToken = refresh});
         }
 
         [HttpGet("logout")]
-        public async Task<IActionResult> LogOut()
+        public async Task<IActionResult> LogOut(TokensModel tokens)
         {
-
-            await _signInManager.SignOutAsync();
-            return Ok();
+            bool result = await _tokenManager.DeactiveTokensAsync(tokens.AccessToken, tokens.RefreshToken);
+            if (result)
+            {
+                var refresh = await _appDbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Id == tokens.RefreshToken);
+                _appDbContext.RefreshTokens.Remove(refresh);
+                await _signInManager.SignOutAsync();
+                return Ok();
+            }
+            else
+            {
+                ModelState.AddModelError("ProblemDetails", "Tokens are invalid probably.");
+                return BadRequest(ModelState);
+            }
+            
         }
 
         [HttpGet("get")]
@@ -151,4 +174,5 @@ namespace BackendGVK.Controllers
         [DataType(DataType.Password)]
         public string Password { get; set; }
     }
+
 }
