@@ -1,14 +1,21 @@
 ﻿using BackendGVK.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace BackendGVK.Db
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            Database.EnsureCreated();
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            
         }
     }
 }

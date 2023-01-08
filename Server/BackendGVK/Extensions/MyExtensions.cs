@@ -24,7 +24,8 @@ namespace BackendGVK.Extensions
                     ValidAudience = audience,
                     ValidateLifetime = true,
                     IssuerSigningKey = signInKey,
-                    ValidateIssuerSigningKey = true
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = TimeSpan.Zero
                 };
             });
 

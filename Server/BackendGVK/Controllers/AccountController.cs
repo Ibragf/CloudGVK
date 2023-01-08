@@ -1,4 +1,6 @@
-﻿using BackendGVK.Models;
+﻿using BackendGVK.Db;
+using BackendGVK.Models;
+using BackendGVK.Services;
 using BackendGVK.Services.Configs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,10 +23,13 @@ namespace BackendGVK.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JwtSettings _jwtSettings;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<JwtSettings> jwtSettings) {
+        private readonly ITokenManager _tokenManager;
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<JwtSettings> jwtSettings,
+            ITokenManager tokenManager) {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
+            _tokenManager = tokenManager;
         }
 
         [HttpPost("register")]
@@ -41,7 +46,6 @@ namespace BackendGVK.Controllers
                 };
 
                 await _userManager.AddClaimsAsync(user, claims);
-                await _userManager.AddClaimAsync(user, new Claim("Email", user.Email));
 
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
@@ -90,6 +94,21 @@ namespace BackendGVK.Controllers
             return Ok(token);
         }
 
+        [HttpGet("logout")]
+        public async Task<IActionResult> LogOut()
+        {
+
+            await _signInManager.SignOutAsync();
+            return Ok();
+        }
+
+        [HttpGet("get")]
+        public async Task<IActionResult> LogGet([FromServices] AppDbContext dbContext)
+        {
+            var id = dbContext.Users.Where(x => x.UserName == "vova").Select(x => x.RefreshToken).ToString();
+            return Ok();
+        }
+
         private string GetToken(IEnumerable<Claim> claims)
         {
             var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
@@ -100,9 +119,10 @@ namespace BackendGVK.Controllers
                 signingCredentials: new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256),
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(5)
+                expires: DateTime.UtcNow.AddMinutes(1)
             );
 
+            
             string token = new JwtSecurityTokenHandler().WriteToken(jwt);
             return token;
         }

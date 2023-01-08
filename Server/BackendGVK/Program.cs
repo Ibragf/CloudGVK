@@ -1,6 +1,7 @@
 using BackendGVK.Db;
 using BackendGVK.Extensions;
 using BackendGVK.Models;
+using BackendGVK.Services;
 using BackendGVK.Services.Configs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -27,9 +28,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
 }).AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.InstanceName = builder.Configuration.GetConnectionString("Redis:Instance");
+    options.Configuration = builder.Configuration.GetConnectionString("Redis:Configuration");
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ITokenManager, TokenManager>();
 
 var app = builder.Build();
 
