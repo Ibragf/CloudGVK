@@ -3,6 +3,7 @@ using System;
 using BackendGVK.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendGVK.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230108204954_remove_required_attr")]
+    partial class remove_required_attr
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.12");
@@ -63,6 +65,7 @@ namespace BackendGVK.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TokenId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -89,6 +92,10 @@ namespace BackendGVK.Migrations
             modelBuilder.Entity("BackendGVK.Models.RefreshToken", b =>
                 {
                     b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("exp")
@@ -231,7 +238,9 @@ namespace BackendGVK.Migrations
                 {
                     b.HasOne("BackendGVK.Models.RefreshToken", "RefreshToken")
                         .WithMany()
-                        .HasForeignKey("TokenId");
+                        .HasForeignKey("TokenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("RefreshToken");
                 });

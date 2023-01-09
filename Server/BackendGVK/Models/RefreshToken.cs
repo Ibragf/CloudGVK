@@ -9,6 +9,5 @@ namespace BackendGVK.Models
         public string Id { get; set; }
         [Required]
         public DateTime exp { get; set; }
-        public string Description { get; set; }
     }
 }

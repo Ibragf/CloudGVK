@@ -6,7 +6,7 @@ namespace BackendGVK.Models
     public class ApplicationUser : IdentityUser
     {
         [ForeignKey("TokenId")]
-        public RefreshToken RefreshToken { get; set; }
-        public string TokenId { get; set; }
+        public RefreshToken? RefreshToken { get; set; }
+        public string? TokenId { get; set; }
     }
 }

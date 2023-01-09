@@ -23,7 +23,7 @@ namespace BackendGVK.Services
         {
             var principal=GetClaimsPrincipal(access);
             if (principal == null) return false;
-            var utcValue = principal.Claims.FirstOrDefault(x => x.Type=="exp")?.ToString();
+            var utcValue = principal.Claims.FirstOrDefault(x => x.Type=="exp")?.Value;
             if (utcValue == null) return false;
 
             double utc;
@@ -34,7 +34,7 @@ namespace BackendGVK.Services
             catch(Exception ex) { return false; }
 
             DateTime datetime = UnixTimeStampToDateTime(utc);
-            TimeSpan exp=datetime.Subtract(DateTime.UtcNow.AddMinutes(3));
+            TimeSpan exp=datetime.Subtract(DateTime.UtcNow).Add(new TimeSpan(0,3,0));
             await _cache.SetStringAsync($"tokens:{refresh}:deactivated",string.Empty, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp} );
             await _cache.SetStringAsync($"tokens:{access}:deactivated", string.Empty, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp });
             return true;
@@ -69,7 +69,7 @@ namespace BackendGVK.Services
 
         public async Task<bool> isActiveAsync(string token)
         {
-            string result = await _cache.GetStringAsync(token);
+            string result = await _cache.GetStringAsync($"tokens:{token}:deactivated");
             return result == null ? true : false;
         }
 

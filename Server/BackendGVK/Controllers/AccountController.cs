@@ -106,7 +106,7 @@ namespace BackendGVK.Controllers
             return Ok(new TokensModel { AccessToken = access, RefreshToken = refresh});
         }
 
-        [HttpGet("logout")]
+        [HttpPost("logout")]
         public async Task<IActionResult> LogOut(TokensModel tokens)
         {
             bool result = await _tokenManager.DeactiveTokensAsync(tokens.AccessToken, tokens.RefreshToken);
@@ -114,6 +114,7 @@ namespace BackendGVK.Controllers
             {
                 var refresh = await _appDbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Id == tokens.RefreshToken);
                 _appDbContext.RefreshTokens.Remove(refresh);
+                await _appDbContext.SaveChangesAsync();
                 await _signInManager.SignOutAsync();
                 return Ok();
             }
