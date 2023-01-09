@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "bvFAM4qaZRZRySogyIis7MTdxWPurgPXKg6syuw/85iqidyN1CAHNlx/XmAsahSbvrQuq1wEWevg+ky3+GPePA==",
+  "dgSpecHash": "Mkh+zCOjuy6RUechi8TuqlpStKF58+XcrM2hioac4DErH6ImA3TtGowx7N5+4xB0EU1xIeInOUZd/lCtC1mP/Q==",
   "success": true,
-  "projectFilePath": "D:\\GitDesktop\\CloudGVK\\server\\BackendGVK\\BackendGVK.csproj",
+  "projectFilePath": "D:\\GitDesktop\\CloudGVK\\Server\\BackendGVK\\BackendGVK.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Гаджи\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\microsoft.aspnetcore.authentication\\2.2.0\\microsoft.aspnetcore.authentication.2.2.0.nupkg.sha512",
