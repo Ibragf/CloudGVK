@@ -2,7 +2,6 @@
     display: flex;
     justify-content: space-between;
     justify-items: center;
-    margin: 10px;
     padding: 7px 10px;
 
     background-color: var(--light-grey);

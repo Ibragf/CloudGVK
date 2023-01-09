@@ -5,11 +5,16 @@
     padding: 10px 15px;
 
     display: flex;
+    align-items: center;
+    line-height: 1;
     gap: 3px;
     justify-content: center;
     box-shadow: 3px 4px 5px grey;
 
     transition: .2s linear;
+
+    font-family: inherit;
+    font-weight: 500;
 }
 
 .authBtn:hover {
