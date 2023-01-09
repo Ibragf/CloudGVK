@@ -1,29 +1,35 @@
-import { ButtonProps } from "./ButtonProps";
+import { ButtonProps } from "../../../interfaces/ButtonProps";
 import styles from "./Button.module.css";
 import cn from "classnames";
-import { MdUpload } from "react-icons/md";
-import { HiPlus } from "react-icons/hi";
+import { IoIosArrowDown } from "react-icons/io";
 
 const Button = ({
   children,
   color = "white",
   icon,
+  optionBtn = false,
+  stateOpenList,
+  className,
   ...props
 }: ButtonProps): JSX.Element => {
   return (
     <button
-      className={cn(styles.btn, {
+      className={cn(styles.btn, className, "shadow", {
         [styles.white]: color === "white",
         [styles.yellow]: color === "yellow",
+        [styles.optionBtn]: optionBtn,
       })}
       {...props}
     >
-      {icon === "create" ? (
-        <HiPlus className={styles.svg} />
-      ) : (
-        <MdUpload className={styles.svg} />
-      )}
+      {icon}
       {children}
+      {optionBtn && (
+        <IoIosArrowDown
+          className={cn(styles.arrowDown, {
+            [styles.arrowReverse]: stateOpenList,
+          })}
+        />
+      )}
     </button>
   );
 };

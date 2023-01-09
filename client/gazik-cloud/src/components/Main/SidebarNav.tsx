@@ -1,5 +1,4 @@
-import { ListItemsInterface } from "../interfaces/Sidebar";
-import "../styles/Sidebar.css";
+import { ListItemsInterface } from "../../interfaces/Sidebar";
 import { AiFillFile } from "react-icons/ai";
 import { HiPhotograph } from "react-icons/hi";
 import { BiTrash } from "react-icons/bi";
@@ -12,7 +11,7 @@ const SidebarNav = (): JSX.Element => {
   ];
 
   return (
-    <section className="sidebar-nav">
+    <div className="sidebar-nav">
       <ul className="list-sidebar">
         {listItems.map((item, i) => (
           <li className="item-list-sidebar" key={`${item.name}-${i}`}>
@@ -21,7 +20,7 @@ const SidebarNav = (): JSX.Element => {
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 };
 

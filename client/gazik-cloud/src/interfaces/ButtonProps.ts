@@ -6,6 +6,8 @@ export interface ButtonProps
     HTMLButtonElement
   > {
   color?: "yellow" | "white";
-  children: ReactNode;
-  icon: "create" | "load";
+  children?: ReactNode;
+  icon: JSX.Element;
+  optionBtn?: boolean;
+  stateOpenList?: boolean;
 }

@@ -5,6 +5,7 @@
   background: rgb(242, 238, 238);
 }
 
+
 /* ============================ */
 /* Sidebar Nav */
 /* ============================ */
@@ -14,7 +15,7 @@
 }
 
 .sidebar-nav {
-  margin-top: 15px;
+  margin-top: 10px;
 }
 
 .list-sidebar {

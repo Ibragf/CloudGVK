@@ -28,3 +28,41 @@ body {
   padding-top: 40px;
   background: var(--light-grey);
 }
+
+/* Shadow */
+.shadow {
+  box-shadow: 1px 1px 10px rgb(205, 205, 205);
+}
+
+/* Active */
+.active {
+  background: var(--light-grey);
+}
+
+/* Display*/
+.dis-none {
+  display: none;
+}
+
+.dis-block {
+  display: block;
+}
+
+.invisible {
+  opacity: 0;
+}
+
+/* ================= */
+/* svg */
+/* ================= */
+
+.sidebar-btn-svg {
+  position: absolute;
+  top: 10px;
+  left: 7px;
+  font-size: 20px;
+}
+
+.big-svg {
+  font-size: 25px;
+}
