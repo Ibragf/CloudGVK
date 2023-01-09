@@ -1,0 +1,58 @@
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 10px;
+  /* height: 35px; */
+  position: relative;
+
+  margin-bottom: 7px;
+
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+  border-radius: 7px;
+
+  font-size: 15px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.optionBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: auto;
+  margin: 0;
+}
+
+.yellow {
+  box-shadow: 1px 1px 10px rgb(174, 174, 51);
+  background: var(--yellow);
+}
+
+.white {
+  background: var(--white);
+  /* box-shadow: 1px 1px 10px rgb(205, 205, 205); */
+  /* box-shadow: 3px 4px 5px grey; */
+}
+
+.yellow:hover {
+  background: #e8c854;
+}
+
+.white:hover {
+  background: var(--light-grey);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.arrowDown {
+  transition: .2s;
+}
+
+.arrowReverse{
+  transform: rotate(180deg);
+}
