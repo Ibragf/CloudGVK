@@ -1,0 +1,25 @@
+.authBtn {
+    border-radius: 10px;
+    background-color: #fff;
+    border: none;
+    padding: 10px 15px;
+
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    box-shadow: 3px 4px 5px grey;
+
+    transition: .2s linear;
+}
+
+.authBtn:hover {
+    cursor: pointer;
+
+    transform: translateY(-3px);
+}
+
+.authBtn:active {
+    box-shadow: 1px 2px 5px grey;
+
+    transform: translateY(0);
+}

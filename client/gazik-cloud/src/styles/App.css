@@ -7,4 +7,11 @@
 html, body {
     font-size: 16px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* background-color: var(--light-grey); */
+}
+
+:root {
+  --grey: #696b76;
+  --light-grey: #e5eaf1;
+  --yellow: #ffdc60;
 }
