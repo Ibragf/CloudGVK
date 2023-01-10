@@ -88,6 +88,7 @@ namespace BackendGVK.Controllers
             {
                 var claims = await _userManager.GetClaimsAsync(user);
                 token = await _tokenManager.GenerateTokenAsync(user.Id, claims, model.FingerPrint);
+                if (token == null) return BadRequest();
             }
             else
             {

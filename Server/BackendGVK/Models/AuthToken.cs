@@ -6,12 +6,12 @@ namespace BackendGVK.Models
     public class AuthToken
     {
         [Key]
-        [MaxLength(250)]
+        [MaxLength(256)]
         public string Id { get; set; }
         public DateTime Exp { get; set; }
 
-        [MaxLength(100)]
-        public string FingerPrint { get; set; }
+        [MaxLength(500)]
+        public string Token { get; set; }
         public string ApplicationUserId { get; set; }
         public ApplicationUser User { get; set; }
     }

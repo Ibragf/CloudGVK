@@ -29,36 +29,57 @@ namespace BackendGVK.Services
         {
             DateTime dateTime;
             string jwt = GenerateToken(claims, out dateTime);
+            string email = claims.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
+            string hashFinger = GetHash256(fingerPrint + email);
 
-            AuthToken token = new AuthToken
+            var result = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == hashFinger);
+
+            if(result != null) {
+                bool isDeactive = await DeactiveTokenAsync(result.Token);
+                if (isDeactive)
+                {
+                    result.Token = jwt;
+                    result.Exp = dateTime;
+                }
+                else return null;
+            }
+            else
             {
-                Id = jwt,
-                Exp = dateTime,
-                FingerPrint = fingerPrint,
-                ApplicationUserId = userId,
-            };
+                AuthToken token = new AuthToken
+                {
+                    Id = hashFinger,
+                    Exp = dateTime,
+                    Token = jwt,
+                    ApplicationUserId = userId,
+                };
+                await _dbContext.Tokens.AddAsync(token);
+            }
 
-            await _dbContext.Tokens.AddAsync(token);
             await _dbContext.SaveChangesAsync();
 
             return jwt;
         }
         public async Task<string> RefreshTokenAsync(string token, string fingerPrint)
         {
-            AuthToken? authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == token);
-            if (authToken == null || authToken.FingerPrint!=fingerPrint) return null;
+            var principal = GetClaimsPrincipal(token);
+            if (principal == null) return null;
+
+            string email = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
+            string hashFinger = GetHash256(fingerPrint + email);
+            AuthToken? authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == hashFinger);
+            if (authToken == null || authToken.Token!= token) return null;
 
             bool isDeactivated = await DeactiveTokenAsync(token);
             if (!isDeactivated) return null;
 
             DateTime dateTime;
-            var principal = GetClaimsPrincipal(token);
             string jwt = GenerateToken(principal.Claims, out dateTime);
 
             AuthToken refreshToken = new AuthToken
             {
-                Id = jwt,
-                FingerPrint = authToken.FingerPrint,
+                Id = authToken.Id,
+                Token = jwt,
+                Exp = dateTime,
                 ApplicationUserId = authToken.ApplicationUserId
             };
 
@@ -70,10 +91,10 @@ namespace BackendGVK.Services
         }
         public async Task<bool> RemoveTokenAsync(string token)
         {
-            bool isDeactivated = await DeactiveTokenAsync(token);
-            if(!isDeactivated) return false;
+            bool isDeactive = await DeactiveTokenAsync(token);
+            if(!isDeactive) return false;
 
-            AuthToken authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id==token);
+            AuthToken authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Token==token);
             if (authToken != null)
             {
                 _dbContext.Remove(authToken);
@@ -152,6 +173,24 @@ namespace BackendGVK.Services
 
             string token = new JwtSecurityTokenHandler().WriteToken(jwt);
             return token;
+        }
+        private string GetHash256(string value)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] hashBytes;
+
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                hashBytes = sha256.ComputeHash(bytes);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach (var byt in hashBytes)
+            {
+                sb.Append(byt.ToString("x2"));
+            }
+            string hashString = sb.ToString();
+            return hashString;
         }
     }
 }
