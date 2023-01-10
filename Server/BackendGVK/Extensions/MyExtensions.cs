@@ -31,5 +31,11 @@ namespace BackendGVK.Extensions
 
             return services;
         }
+
+        public static IApplicationBuilder UseTokenManager(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<TokenManagerMiddleware>();
+            return app;
+        }
     }
 }

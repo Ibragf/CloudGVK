@@ -8,7 +8,7 @@ namespace BackendGVK.Db
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<AuthToken> Tokens { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }

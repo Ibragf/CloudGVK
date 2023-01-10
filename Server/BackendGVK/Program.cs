@@ -52,6 +52,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseTokenManager();  
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>

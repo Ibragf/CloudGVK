@@ -27,7 +27,8 @@ namespace BackendGVK.Controllers
         private readonly ITokenManager _tokenManager;
         private readonly AppDbContext _appDbContext;
         public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<JwtSettings> jwtSettings,
-            ITokenManager tokenManager, AppDbContext context) {
+            ITokenManager tokenManager, AppDbContext context)
+        {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtSettings = jwtSettings.Value;
@@ -67,11 +68,10 @@ namespace BackendGVK.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
-            string access;
-            string refresh;
+            string token;
             var user = await _userManager.FindByEmailAsync(model.Email);
 
-            if(user==null)
+            if (user == null)
             {
                 ModelState.AddModelError("ProblemDetails", "Could not find user.");
                 return NotFound(ModelState);
@@ -87,15 +87,7 @@ namespace BackendGVK.Controllers
             if (result.Succeeded)
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                access = _tokenManager.GenerateToken(claims);
-                refresh = _tokenManager.GenerateRefreshToken();
-                var refreshToken = new RefreshToken
-                {
-                    Id = refresh,
-                    exp = DateTime.Now.AddDays(30),
-                };
-                await _appDbContext.AddAsync(refreshToken);
-                await _appDbContext.SaveChangesAsync();
+                token = await _tokenManager.GenerateTokenAsync(user.Id, claims, model.FingerPrint);
             }
             else
             {
@@ -103,77 +95,67 @@ namespace BackendGVK.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Ok(new TokensModel { AccessToken = access, RefreshToken = refresh});
+            return Ok(token);
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> LogOut(TokensModel tokens)
+        public async Task<IActionResult> LogOut(string token)
         {
-            bool result = await _tokenManager.DeactiveTokensAsync(tokens.AccessToken, tokens.RefreshToken);
-            if (result)
-            {
-                var refresh = await _appDbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Id == tokens.RefreshToken);
-                _appDbContext.RefreshTokens.Remove(refresh);
-                await _appDbContext.SaveChangesAsync();
-                await _signInManager.SignOutAsync();
-                return Ok();
-            }
+            bool result = await _tokenManager.RemoveTokenAsync(token);
+            if (result) return Ok();
             else
             {
-                ModelState.AddModelError("ProblemDetails", "Tokens are invalid probably.");
+                ModelState.AddModelError("ProblemDetails", "Token is invalid probably.");
                 return BadRequest(ModelState);
             }
-            
-        }
 
-        [HttpGet("get")]
-        public async Task<IActionResult> LogGet([FromServices] AppDbContext dbContext)
+        }
+        [HttpPost("token/refresh")]
+        public async Task<IActionResult> RefreshToken(RefreshModel model)
         {
-            var id = dbContext.Users.Where(x => x.UserName == "vova").Select(x => x.RefreshToken).ToString();
-            return Ok();
+            string refresh=await _tokenManager.RefreshTokenAsync(model.Token, model.FingerPrint);
+            if(refresh == null)
+            {
+                ModelState.AddModelError("ProblemDetails", "Token or fingerPrint is invalid.");
+                return BadRequest(ModelState);
+            }
+            else return Ok(refresh);
         }
 
-        private string GetToken(IEnumerable<Claim> claims)
+        public class SignInModel
         {
-            var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-
-            var jwt = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                signingCredentials: new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256),
-                claims: claims,
-                notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(1)
-            );
-
-            
-            string token = new JwtSecurityTokenHandler().WriteToken(jwt);
-            return token;
+            [Required]
+            [EmailAddress]
+            public string Email { get; set; }
+            [Required]
+            [MinLength(10, ErrorMessage = "Minimum length is 10")]
+            public string Password { get; set; }
+            [Required]
+            public string FingerPrint { get; set; }
         }
-    }
 
-    public class SignInModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-        [Required]
-        [MinLength(10, ErrorMessage = "Minimum length is 10")]
-        public string Password { get; set; }
-    }
+        public class RegisterModel
+        {
+            [Required]
+            [MaxLength(30, ErrorMessage = "Maximum length is 30")]
+            [MinLength(3, ErrorMessage = "Minimum length is 3")]
+            public string UserName { get; set; }
+            [Required]
+            [EmailAddress]
+            public string Email { get; set; }
+            [Required]
+            [DataType(DataType.Password)]
+            public string Password { get; set; }
+        }
 
-    public class RegisterModel
-    {
-        [Required]
-        [MaxLength(30, ErrorMessage ="Maximum length is 30")]
-        [MinLength(3, ErrorMessage = "Minimum length is 3")]
-        public string UserName { get; set;}
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public class RefreshModel
+        {
+            [Required]
+            public string Token { get; set; }
+            [Required]
+            public string FingerPrint { get; set; }
+        }
+
     }
 
 }
