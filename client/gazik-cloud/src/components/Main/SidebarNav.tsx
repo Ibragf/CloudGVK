@@ -1,10 +1,12 @@
-import { ListItemsInterface } from "../../interfaces/Sidebar";
 import { AiFillFile } from "react-icons/ai";
 import { HiPhotograph } from "react-icons/hi";
 import { BiTrash } from "react-icons/bi";
 
 const SidebarNav = (): JSX.Element => {
-  const listItems: ListItemsInterface[] = [
+  const listItems: {
+    name: string;
+    icon?: JSX.Element;
+  }[] = [
     { name: "Файлы", icon: <AiFillFile className="sidebar-svg" /> },
     { name: "Фото", icon: <HiPhotograph className="sidebar-svg" /> },
     { name: "Корзина", icon: <BiTrash className="sidebar-svg" /> },
