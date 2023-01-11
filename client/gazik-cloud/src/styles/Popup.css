@@ -52,10 +52,11 @@
 }
 
 .signIn-popup {
-    height: 250px;
+    min-height: 150px;
+    height: 220px;
 }
 
 .signUp-popup {
-    height: 300px;
+    min-height: 300px;
 }
 

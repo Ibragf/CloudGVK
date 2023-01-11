@@ -43,7 +43,7 @@ const Header: React.FC = () => {
           Sign up
         </AuthButton>
       </div>
-      <PopUp display={displayPopUp} variant={authStr}>
+      <PopUp close={setDisplayPopUp} display={displayPopUp} variant={authStr}>
         {authStr === "signIn" ? (
           <PopUpSignIn></PopUpSignIn>
         ) : (
