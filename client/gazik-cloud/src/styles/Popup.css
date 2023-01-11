@@ -1,61 +1,88 @@
-
 .popup {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1000;
-    height: 20rem;
-    width: 250px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  height: 20rem;
+  width: 250px;
 
-    background-color: var(--light-grey);
+  background-color: var(--light-grey);
 
-    border-radius: 20px;
-    transform: translate(-50%, -50%);
+  border-radius: 20px;
+  transform: translate(-50%, -50%);
 
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 .popup-container {
-    height: 100%;
-    padding: 15px;
+  height: 100%;
+  padding: 15px;
 }
 
 .popup-form {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .popup-label {
-    display: block;
-    margin-bottom: 5px;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .close-icon {
-    text-align: end;
-    font-size: 1.2rem;
+  text-align: end;
+  font-size: 1.2rem;
 }
 
 .close-icon {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
 
-    transition: .3s linear;
+  transition: 0.3s linear;
 }
 
-.close-icon:hover{
-    cursor: pointer;
-    transform: scale(1.2) translateY(-2px);
+.close-icon:hover {
+  cursor: pointer;
+  transform: scale(1.2) translateY(-2px);
 }
 
 .signIn-popup {
-    height: 250px;
+  height: 250px;
 }
 
 .signUp-popup {
-    height: 300px;
+  min-height: 300px;
 }
 
+/* ======================== */
+/* popup craete form*/
+/* ========================== */
+.create-popup {
+  width: 420px;
+  height: 210px;
+}
+
+.popup-create-container {
+  width: 100%;
+  height: 100%;
+  padding: 0 10px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+}
+
+.btn-create-folder-container {
+    width: 110px;
+    justify-self: end;
+    align-self: end;
+}
+
+.title-create-folder-name {
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1rem;
+}

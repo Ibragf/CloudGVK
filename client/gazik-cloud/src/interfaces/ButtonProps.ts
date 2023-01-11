@@ -7,7 +7,7 @@ export interface ButtonProps
   > {
   color?: "yellow" | "white";
   children?: ReactNode;
-  icon: JSX.Element;
+  icon?: JSX.Element;
   optionBtn?: boolean;
   stateOpenList?: boolean;
 }

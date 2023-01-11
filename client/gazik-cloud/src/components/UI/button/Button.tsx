@@ -3,6 +3,7 @@ import styles from "./Button.module.css";
 import cn from "classnames";
 import { IoIosArrowDown } from "react-icons/io";
 
+
 const Button = ({
   children,
   color = "white",
@@ -14,12 +15,12 @@ const Button = ({
 }: ButtonProps): JSX.Element => {
   return (
     <button
+      {...props}
       className={cn(styles.btn, className, "shadow", {
         [styles.white]: color === "white",
         [styles.yellow]: color === "yellow",
         [styles.optionBtn]: optionBtn,
       })}
-      {...props}
     >
       {icon}
       {children}

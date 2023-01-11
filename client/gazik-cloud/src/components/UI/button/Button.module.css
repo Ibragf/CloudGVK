@@ -2,7 +2,6 @@
   display: inline-block;
   width: 100%;
   padding: 10px;
-  /* height: 35px; */
   position: relative;
 
   margin-bottom: 7px;
@@ -15,7 +14,7 @@
 
   font-size: 15px;
   font-weight: 500;
-  transition: 0.2s;
+  transition: background .2s;
 }
 
 .optionBtn {
@@ -27,7 +26,7 @@
 }
 
 .yellow {
-  box-shadow: 1px 1px 10px rgb(174, 174, 51);
+  /* box-shadow: 1px 1px 10px rgb(174, 174, 51); */
   background: var(--yellow);
 }
 
@@ -38,21 +37,23 @@
 }
 
 .yellow:hover {
-  background: #e8c854;
+  background: #f0ce53;
 }
 
 .white:hover {
-  background: var(--light-grey);
+  /* background: var(--light-grey); */
+  background: rgb(242, 238, 238);
 }
 
 .btn:active {
-  transform: scale(0.95);
+  transform: scale(1.02);
+  /* box-shadow: 0px 0px 10px rgb(205, 205, 205); */
 }
 
 .arrowDown {
-  transition: .2s;
+  transition: 0.2s;
 }
 
-.arrowReverse{
+.arrowReverse {
   transform: rotate(180deg);
 }
