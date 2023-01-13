@@ -3,8 +3,11 @@ import TextInput from "../UI/input/TextInput";
 import AuthButton from "../UI/button/AuthButton";
 import axios from "../../apis/server";
 import { PopUpAuthProps } from "../../interfaces/PopUpAuthProps";
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
 const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
+  const fpPromise = FingerprintJS.load();
+
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [dirtyEmail, setDirtyEmail] = useState<boolean>(false);
@@ -58,15 +61,6 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
     }
   };
 
-  const errorHandler = (error: number) => {
-    if(error === 404) 
-        alert('Не найдено');
-    if(error === 400) 
-        alert('Ошибка на стороне пользователя');
-    if(error === 401)
-        alert('Неверная авторизация!');
-  }
-
   const onSubmitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
@@ -76,19 +70,29 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
           email: email,
           password: password,
         });
+
         console.log(response);
-        errorHandler(response.status);
       } else {
+
+        const fp = await fpPromise;
+        const result = await fp.get();
         const response = await axios.post("/api/login", {
-          fingerPrint: 'zadfasdf',
+          fingerPrint: result.visitorId,
           email: email,
           password: password,
         });
+        localStorage.setItem('token', response.data);
+
+        const response1 = await axios.get('/WeatherForecast', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
         console.log(response);
-        errorHandler(response.status);
+        console.log(response1);
       }
-    } catch (error) {
-      alert(`Something went wrong(${error})`);
+    } catch (error: any) {
+        console.log(error);    
     }
   };
 
