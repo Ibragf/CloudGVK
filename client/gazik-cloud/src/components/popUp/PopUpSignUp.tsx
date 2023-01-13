@@ -60,7 +60,7 @@ const PopUpSignUp: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('/api/register', {
+      const response = await axios.post('/api/signup', {
         userName: name,
         email: email,
         password: password,

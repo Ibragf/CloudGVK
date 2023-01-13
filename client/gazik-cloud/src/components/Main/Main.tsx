@@ -18,7 +18,6 @@ import ShowPhoto from "./ShowPhoto";
 import { useState } from "react";
 
 const LayoutMain = (): JSX.Element => {
-  
   const [activePage, setActivePage] = useState<string>("Files");
   return (
     <main className="main">

@@ -1,8 +1,6 @@
 import axios from "axios";
 
 export default axios.create({
-    baseURL: '',
-    params: {
-
-    }
-})
+  baseURL: "http://galaur.ru",
+  params: {},
+});

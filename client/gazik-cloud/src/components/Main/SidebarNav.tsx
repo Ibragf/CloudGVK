@@ -25,13 +25,13 @@ const SidebarNav = ({
           <Link
             to={item.name === "Files" ? "" : item.name.toLowerCase()}
             className="link-page"
+            key={`${item.name}-${i}`}
           >
             <li
               className={cn("item-list-sidebar", {
                 "active-page": item.name === activePage,
               })}
               onClick={() => setActivePage(item.name)}
-              key={`${item.name}-${i}`}
             >
               {item.icon}
               {item.name}
