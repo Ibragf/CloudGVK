@@ -3,8 +3,9 @@ import { BsSortUpAlt } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import ListSortOptions from "./ListSortOptions";
 import ListViewOptions, { findSvg } from "./ListViewOptions";
+import { HeaderShowContentProps } from "../../interfaces/HeaderShowContentProps";
 
-const HeaderShowFiles = (): JSX.Element => {
+const HeaderShowContent = ({ page }: HeaderShowContentProps): JSX.Element => {
   const sortOptions: string[] = [
     "Sort by name",
     "Sort by size",
@@ -32,7 +33,7 @@ const HeaderShowFiles = (): JSX.Element => {
 
   return (
     <div className="header-show-files">
-      <div className="name-section">Files</div>
+      <div className="name-section">{page}</div>
       <div className="select-section">
         <Button
           className="btn-sort"
@@ -73,4 +74,4 @@ const HeaderShowFiles = (): JSX.Element => {
   );
 };
 
-export default HeaderShowFiles;
+export default HeaderShowContent;

@@ -1,4 +1,4 @@
-.show-files {
+.show-content {
   padding: 20px 40px;
 }
 
@@ -51,7 +51,8 @@
 }
 
 .drop-down-list-item:hover {
-  background: var(--light-grey);
+  background: rgb(242, 238, 238);
+  /* background: var(--light-grey); */
 }
 
 .view-list-item {

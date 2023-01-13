@@ -33,11 +33,6 @@ body {
   box-shadow: 1px 1px 10px rgb(205, 205, 205);
 }
 
-/* Active */
-.active {
-  background: var(--light-grey);
-}
-
 /* Display*/
 .dis-none {
   display: none;

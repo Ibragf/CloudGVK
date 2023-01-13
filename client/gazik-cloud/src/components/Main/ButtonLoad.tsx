@@ -6,23 +6,9 @@ const ButtonLoad: React.FC = () => {
   const refLoadFile = useRef<HTMLInputElement>(null);
 
   const downloadFile = (e: any): void => {
-    const file = e.target.files[0];
-    console.log(e);
-    const reader = new FileReader();
-    reader.readAsText(file);
-
-    // reader.onload = function () {
-    //   console.log(reader.result);
-    // };
-
-    // reader.onerror = function () {
-    //   console.log(reader.error);
-    // };
-
+    // const file = e.target.files[0];
     // const formData = new FormData();
-    // console.log(file);
-    // formData.append("name", file);
-    // console.log(e);
+
   };
 
   const handleLoadFile = (): void => {
