@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import TextInput from "../UI/input/TextInput";
 import AuthButton from "../UI/button/AuthButton";
-import axios from '../../apis/server';
+import axios from "../../apis/server";
+import { PopUpAuthProps } from "../../interfaces/PopUpAuthProps";
 
-// States
-const PopUpSignUp: React.FC = () => {
+const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [dirtyEmail, setDirtyEmail] = useState<boolean>(false);
@@ -19,35 +19,37 @@ const PopUpSignUp: React.FC = () => {
   const [formValid, setFormValid] = useState<boolean>(false);
 
   useEffect(() => {
-    if(emailError || passError) setFormValid(false);
+    if (emailError || passError) setFormValid(false);
     else setFormValid(true);
-  }, [emailError, passError])
-
+  }, [emailError, passError]);
 
   //Handlers
 
   const emailHandler = (e: any) => {
     setEmail(e.target.value);
-    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-    if(!re.test(String(e.target.value).toLocaleLowerCase())) {
-      setEmailError(`E-mail has to contain "@" sign and generic domain(.com, .ru etc)`);
-    } else setEmailError('')
-  }
+    if (!re.test(String(e.target.value).toLocaleLowerCase())) {
+      setEmailError(
+        `E-mail has to contain "@" sign and generic domain(.com, .ru etc)`
+      );
+    } else setEmailError("");
+  };
 
   const passHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    const re =  /^[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+    const re = /^[a-zA-Z0-9!@#$%^&*]{6,16}$/;
 
-    if(!re.test(String(e.target.value))) {
-      setPassError('Password has to contain at least 6 characters')
-    } else setPassError('');
-  }
+    if (!re.test(String(e.target.value))) {
+      setPassError("Password has to contain at least 6 characters");
+    } else setPassError("");
+  };
 
   const blurHandler = (e: any) => {
     switch (e.target.id) {
       case "email":
-        setDirtyEmail(true); 
+        setDirtyEmail(true);
         break;
 
       case "pass":
@@ -56,46 +58,43 @@ const PopUpSignUp: React.FC = () => {
     }
   };
 
-  const onSubmitHandler = async(e: React.MouseEvent<HTMLButtonElement>) => {
+  const onSubmitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('', {
-        headers: { 
-          'Access-Control-Allow-Origin' : '*',
-          'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-        },
-      });
+      const response = await axios.post("", {});
       console.log(response);
     } catch (error) {
       alert(`Something went wrong(${error})`);
     }
-  }
-
-  const errorHandler = (error: number) => {
-    
-  }
+  };
 
   return (
     <form className="popup-form" action="">
-      <div className="popup-title"><span>Registration</span></div>
-      <div>
-        <label className="popup-label" htmlFor="name">
-          Name:
-        </label>
-        <TextInput
-          type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        ></TextInput>
+      <div className="popup-title">
+        <span>{type === "signIn" ? "Sign in" : "Registration"}</span>
       </div>
+      {type === "signUp" ? (
+        <div>
+          <label className="popup-label" htmlFor="name">
+            Name:
+          </label>
+          <TextInput
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          ></TextInput>
+        </div>
+      ) : null}
       <div>
         <label className="popup-label" htmlFor="email">
           E-mail:
         </label>
         {dirtyEmail && emailError ? (
-          <div style={{ color: "red", fontSize: ".8rem", marginBottom: '5px', }}>{emailError}</div>
+          <div style={{ color: "red", fontSize: ".8rem", marginBottom: "5px" }}>
+            {emailError}
+          </div>
         ) : null}
         <TextInput
           onBlur={(e) => blurHandler(e)}
@@ -110,7 +109,9 @@ const PopUpSignUp: React.FC = () => {
           Password:
         </label>
         {dirtyPass && passError ? (
-          <div style={{ color: "red", fontSize: ".8rem", marginBottom: '5px' }}>{passError}</div>
+          <div style={{ color: "red", fontSize: ".8rem", marginBottom: "5px" }}>
+            {passError}
+          </div>
         ) : null}
         <TextInput
           onBlur={(e) => blurHandler(e)}
@@ -120,9 +121,15 @@ const PopUpSignUp: React.FC = () => {
           onChange={(e) => passHandler(e)}
         ></TextInput>
       </div>
-      <AuthButton onClick={(e) => onSubmitHandler(e)} disabled={!formValid} backgroundColor="#ffdc60">Submit</AuthButton>
+      <AuthButton
+        onClick={(e) => onSubmitHandler(e)}
+        disabled={!formValid}
+        backgroundColor="#ffdc60"
+      >
+        Submit
+      </AuthButton>
     </form>
   );
 };
 
-export default PopUpSignUp;
+export default PopUpAuth;

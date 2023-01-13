@@ -6,8 +6,7 @@ import SearchBar from "./SearchBar";
 import AuthButton from "../UI/button/AuthButton";
 import PopUp from "../popUp/PopUp";
 import Blur from "../effects/Blur";
-import PopUpSignIn from "../popUp/PopUpSignIn";
-import PopUpSignUp from "../popUp/PopUpSignUp";
+import PopUpAuth from "../popUp/PopUpAuth";
 
 const Header: React.FC = () => {
   const [authStr, setAuthStr] = useState<string>("");
@@ -44,11 +43,7 @@ const Header: React.FC = () => {
         </AuthButton>
       </div>
       <PopUp close={setDisplayPopUp} display={displayPopUp} variant={authStr}>
-        {authStr === "signIn" ? (
-          <PopUpSignIn></PopUpSignIn>
-        ) : (
-          <PopUpSignUp></PopUpSignUp>
-        )}
+        <PopUpAuth type={authStr}/>
       </PopUp>
       <Blur
         onClick={() => setDisplayPopUp(!displayPopUp)}
