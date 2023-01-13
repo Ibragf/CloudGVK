@@ -39,7 +39,7 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
 
   const passHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    const re = /^[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+    const re = /^[a-zA-Z0-9!@#$%^&*]{10,16}$/;
 
     if (!re.test(String(e.target.value))) {
       setPassError("Password has to contain at least 6 characters");
@@ -58,12 +58,35 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
     }
   };
 
+  const errorHandler = (error: number) => {
+    if(error === 404) 
+        alert('Не найдено');
+    if(error === 400) 
+        alert('Ошибка на стороне пользователя');
+    if(error === 401)
+        alert('Неверная авторизация!');
+  }
+
   const onSubmitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
     try {
-      const response = await axios.post("", {});
-      console.log(response);
+      if (type === "signUp") {
+        const response = await axios.post("/api/signup", {
+          userName: name,
+          email: email,
+          password: password,
+        });
+        console.log(response);
+        errorHandler(response.status);
+      } else {
+        const response = await axios.post("/api/login", {
+          fingerPrint: 'zadfasdf',
+          email: email,
+          password: password,
+        });
+        console.log(response);
+        errorHandler(response.status);
+      }
     } catch (error) {
       alert(`Something went wrong(${error})`);
     }
