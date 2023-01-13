@@ -31,6 +31,7 @@ const PopUpSignIn: React.FC = () => {
 
   return (
     <form className="popup-form" action="">
+      <div className="popup-title"><span>Sign in</span></div>
       <div>
         <label className="popup-label" htmlFor="email">
           E-mail:

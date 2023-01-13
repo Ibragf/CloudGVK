@@ -1,8 +1,7 @@
 import axios from "axios";
 
 export default axios.create({
-    baseURL: '',
+    baseURL: 'http://galaur.ru/WeatherForecast/upload',
     params: {
-
-    }
+    },
 })

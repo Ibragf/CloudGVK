@@ -9,7 +9,7 @@ const PopUpSignUp: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [dirtyEmail, setDirtyEmail] = useState<boolean>(false);
   const [emailError, setEmailError] = useState<string>(
-    "The field should not be empty"
+    `The field should not be empty`
   );
   const [password, setPassword] = useState<string>("");
   const [dirtyPass, setDirtyPass] = useState<boolean>(false);
@@ -31,7 +31,7 @@ const PopUpSignUp: React.FC = () => {
     const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
     if(!re.test(String(e.target.value).toLocaleLowerCase())) {
-      setEmailError('Wrong email!');
+      setEmailError(`E-mail has to contain "@" sign and generic domain(.com, .ru etc)`);
     } else setEmailError('')
   }
 
@@ -40,7 +40,7 @@ const PopUpSignUp: React.FC = () => {
     const re =  /^[a-zA-Z0-9!@#$%^&*]{6,16}$/;
 
     if(!re.test(String(e.target.value))) {
-      setPassError('Wrong password!')
+      setPassError('Password has to contain at least 6 characters')
     } else setPassError('');
   }
 
@@ -60,20 +60,25 @@ const PopUpSignUp: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('/api/register', {
-        userName: name,
-        email: email,
-        password: password,
+      const response = await axios.post('', {
+        headers: { 
+          'Access-Control-Allow-Origin' : '*',
+          'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+        },
       });
       console.log(response);
-
     } catch (error) {
       alert(`Something went wrong(${error})`);
     }
   }
 
+  const errorHandler = (error: number) => {
+    
+  }
+
   return (
     <form className="popup-form" action="">
+      <div className="popup-title"><span>Registration</span></div>
       <div>
         <label className="popup-label" htmlFor="name">
           Name:
@@ -90,7 +95,7 @@ const PopUpSignUp: React.FC = () => {
           E-mail:
         </label>
         {dirtyEmail && emailError ? (
-          <div style={{ color: "red" }}>{emailError}</div>
+          <div style={{ color: "red", fontSize: ".8rem", marginBottom: '5px', }}>{emailError}</div>
         ) : null}
         <TextInput
           onBlur={(e) => blurHandler(e)}
@@ -105,7 +110,7 @@ const PopUpSignUp: React.FC = () => {
           Password:
         </label>
         {dirtyPass && passError ? (
-          <div style={{ color: "red" }}>{passError}</div>
+          <div style={{ color: "red", fontSize: ".8rem", marginBottom: '5px' }}>{passError}</div>
         ) : null}
         <TextInput
           onBlur={(e) => blurHandler(e)}
