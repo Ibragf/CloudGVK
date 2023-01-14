@@ -29,12 +29,15 @@ namespace BackendGVK.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ITokenManager _tokenManager;
         private readonly IEmailSender _emailsender;
-        public AuthenticationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenManager tokenManager, IEmailSender emailSender)
+        private readonly GoogleCaptcha _googleCaptcha;
+        public AuthenticationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenManager tokenManager,
+            IEmailSender emailSender, GoogleCaptcha googleCaptcha)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenManager = tokenManager;
             _emailsender = emailSender;
+            _googleCaptcha = googleCaptcha;
         }
 
         [HttpPost("signup")]
@@ -73,15 +76,31 @@ namespace BackendGVK.Controllers
         {
             string token;
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if(!user.EmailConfirmed)
-            {
-                ModelState.AddModelError("errors", "Email not confirmed.");
-                return BadRequest(ModelState);
-            }
+
             if (user == null)
             {
                 ModelState.AddModelError("errors", "Could not find user.");
                 return NotFound(ModelState);
+            }
+            if (!user.EmailConfirmed)
+            {
+                ModelState.AddModelError("errors", "Email not confirmed.");
+                return BadRequest(ModelState);
+            }
+            if(user.AccessFailedCount > 5) {
+                bool isFailed;
+                if(model.RecaptchaResponse==null)
+                {
+                    isFailed = true;
+                    ModelState.AddModelError("errors", "RecaptchaResponse is required.");
+                }
+                else
+                {
+                    var captchaResult = await _googleCaptcha.VerifyTokenAsync(model.RecaptchaResponse);
+                    isFailed = !captchaResult;
+                    if (isFailed) ModelState.AddModelError("errors", "reCaptcha token verification failed.");
+                }
+                if (isFailed) return BadRequest(ModelState);
             }
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, true);
 
@@ -161,12 +180,13 @@ namespace BackendGVK.Controllers
         {
             [Required]
             [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = null!;
             [Required]
             [MinLength(10, ErrorMessage = "Minimum length is 10")]
-            public string Password { get; set; }
+            public string Password { get; set; } = null!;
             [Required]
-            public string FingerPrint { get; set; }
+            public string FingerPrint { get; set; } = null!;
+            public string? RecaptchaResponse { get; set; }
         }
 
         public class RegisterModel
@@ -174,21 +194,21 @@ namespace BackendGVK.Controllers
             [Required]
             [MaxLength(30, ErrorMessage = "Maximum length is 30")]
             [MinLength(3, ErrorMessage = "Minimum length is 3")]
-            public string UserName { get; set; }
+            public string UserName { get; set; } = null!;
             [Required]
             [EmailAddress]
-            public string Email { get; set; }
+            public string Email { get; set; } = null!;
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public string Password { get; set; } = null!;
         }
 
         public class RefreshModel
         {
             [Required]
-            public string Token { get; set; }
+            public string Token { get; set; } = null!;
             [Required]
-            public string FingerPrint { get; set; }
+            public string FingerPrint { get; set; } = null!;
         }
 
     }

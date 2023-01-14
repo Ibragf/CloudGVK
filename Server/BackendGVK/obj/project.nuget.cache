@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "HSEkDiO62lGtEJ/nw27hRaGl4WMXdRkfF86hvqJ8SPIOLBU51MKXioST5ehRD08Q+JSt/cNNr2saX4XWbNP0dA==",
+  "dgSpecHash": "StU5lnnG9xO3ZzkVLoskx1STauF8ORl+xYG9u9FJkw8hTNs+XOEuvKn0HD8eZakHIwjZHhjmQIaluj12Ru0REg==",
   "success": true,
   "projectFilePath": "D:\\GitDesktop\\CloudGVK\\Server\\BackendGVK\\BackendGVK.csproj",
   "expectedPackageFiles": [
@@ -64,6 +64,7 @@
     "C:\\Users\\Гаджи\\.nuget\\packages\\microsoft.win32.registry\\5.0.0\\microsoft.win32.registry.5.0.0.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0\\microsoft.win32.systemevents.5.0.0.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\mimekit\\3.4.3\\mimekit.3.4.3.nupkg.sha512",
+    "C:\\Users\\Гаджи\\.nuget\\packages\\newtonsoft.json\\13.0.2\\newtonsoft.json.13.0.2.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.0\\pipelines.sockets.unofficial.2.2.0.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\portable.bouncycastle\\1.9.0\\portable.bouncycastle.1.9.0.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.2\\sqlitepclraw.bundle_e_sqlite3.2.1.2.nupkg.sha512",

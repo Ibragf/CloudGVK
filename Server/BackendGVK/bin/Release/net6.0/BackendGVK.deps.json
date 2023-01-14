@@ -16,6 +16,7 @@
           "Microsoft.EntityFrameworkCore.Tools": "6.0.12",
           "Microsoft.Extensions.Caching.StackExchangeRedis": "6.0.12",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "1.17.0",
+          "Newtonsoft.Json": "13.0.2",
           "Swashbuckle.AspNetCore": "6.2.3"
         },
         "runtime": {
@@ -511,6 +512,14 @@
           "lib/net6.0/MimeKit.dll": {
             "assemblyVersion": "3.4.0.0",
             "fileVersion": "3.4.3.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.2": {
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.2.27524"
           }
         }
       },
@@ -1326,6 +1335,13 @@
       "sha512": "sha512-7TSAcziEwk0bGWODpFTQASghXfYNBBa5VdM8KO4s5SBp5LYgIVXcQsdLBpPQ2XhZW74wfaX8RBUMs1GTMlLJcA==",
       "path": "mimekit/3.4.3",
       "hashPath": "mimekit.3.4.3.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-R2pZ3B0UjeyHShm9vG+Tu0EBb2lC8b0dFzV9gVn50ofHXh9Smjk6kTn7A/FdAsC8B5cKib1OnGYOXxRBz5XQDg==",
+      "path": "newtonsoft.json/13.0.2",
+      "hashPath": "newtonsoft.json.13.0.2.nupkg.sha512"
     },
     "Pipelines.Sockets.Unofficial/2.2.0": {
       "type": "package",
