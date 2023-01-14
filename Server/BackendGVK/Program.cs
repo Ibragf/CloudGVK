@@ -3,6 +3,7 @@ using BackendGVK.Extensions;
 using BackendGVK.Models;
 using BackendGVK.Services;
 using BackendGVK.Services.Configs;
+using BackendGVK.Services.EmailSender;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 10;
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
-}).AddEntityFrameworkStores<AppDbContext>();
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
+}).AddEntityFrameworkStores<AppDbContext>().AddTokenProvider<ConfirmTokenProvider>("Default");
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.InstanceName = builder.Configuration.GetConnectionString("Redis:Instance");
@@ -37,20 +40,21 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITokenManager, TokenManager>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseCors("AllowAnyOrigin");
 app.UseAuthentication();
 app.UseTokenManager();  
 app.UseAuthorization();

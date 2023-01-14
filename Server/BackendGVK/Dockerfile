@@ -19,4 +19,5 @@ RUN dotnet publish "BackendGVK.csproj" -c Release -o /app/publish /p:UseAppHost=
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY ./Sqlite.db .
 ENTRYPOINT ["dotnet", "BackendGVK.dll"]
