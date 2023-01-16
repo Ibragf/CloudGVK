@@ -1,3 +1,4 @@
 export interface HeaderShowContentProps {
-	page: string;
+  page: string;
+  titleLink?: boolean;
 }

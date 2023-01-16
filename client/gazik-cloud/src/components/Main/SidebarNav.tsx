@@ -1,14 +1,11 @@
 import { AiFillFile } from "react-icons/ai";
 import { HiPhotograph } from "react-icons/hi";
 import { BiTrash } from "react-icons/bi";
-import cn from "classnames";
-import { Link } from "react-router-dom";
-import { SidebarNavProps } from "../../interfaces/SidebarNavProps";
+import { NavLink } from "react-router-dom";
 
-const SidebarNav = ({
-  activePage,
-  setActivePage,
-}: SidebarNavProps): JSX.Element => {
+
+
+const SidebarNav = (): JSX.Element => {
   const listPages: {
     name: string;
     icon?: JSX.Element;
@@ -22,21 +19,20 @@ const SidebarNav = ({
     <div className="sidebar-nav">
       <ul className="list-sidebar">
         {listPages.map((item, i) => (
-          <Link
-            to={item.name === "Files" ? "" : item.name.toLowerCase()}
-            className="link-page"
+          <NavLink
+            to={item.name.toLowerCase()}
+            className={({ isActive }) =>
+              isActive ? "link-page active-page" : "link-page"
+            }
             key={`${item.name}-${i}`}
           >
             <li
-              className={cn("item-list-sidebar", {
-                "active-page": item.name === activePage,
-              })}
-              onClick={() => setActivePage(item.name)}
+              className="item-list-sidebar"
             >
               {item.icon}
               {item.name}
             </li>
-          </Link>
+          </NavLink>
         ))}
       </ul>
     </div>
@@ -44,3 +40,4 @@ const SidebarNav = ({
 };
 
 export default SidebarNav;
+

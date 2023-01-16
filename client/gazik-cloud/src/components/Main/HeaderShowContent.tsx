@@ -1,11 +1,16 @@
 import Button from "../UI/button/Button";
 import { BsSortUpAlt } from "react-icons/bs";
+import { MdKeyboardArrowRight } from "react-icons/md";
 import { useEffect, useState } from "react";
 import ListSortOptions from "./ListSortOptions";
 import ListViewOptions, { findSvg } from "./ListViewOptions";
 import { HeaderShowContentProps } from "../../interfaces/HeaderShowContentProps";
+import { useNavigate } from "react-router-dom";
 
-const HeaderShowContent = ({ page }: HeaderShowContentProps): JSX.Element => {
+const HeaderShowContent = ({
+  page,
+  titleLink,
+}: HeaderShowContentProps): JSX.Element => {
   const sortOptions: string[] = [
     "Sort by name",
     "Sort by size",
@@ -31,10 +36,18 @@ const HeaderShowContent = ({ page }: HeaderShowContentProps): JSX.Element => {
     };
   });
 
+  const navigation = useNavigate();
+
   return (
-    <div className="header-show-files">
-      <div className="name-section">{page}</div>
-      <div className="select-section">
+    <div className="header-show-content">
+      {titleLink ? (
+        <div onClick={() => navigation('/files')} className="name-page-link">
+          {page} <MdKeyboardArrowRight className="name-page-svg" />
+        </div>
+      ) : (
+        <div className="name-page">{page}</div>
+      )}
+      <div className="select-settings">
         <Button
           className="btn-sort"
           onClick={() => setOpenSortOptions(!openSortOptions)}

@@ -32,32 +32,21 @@
   cursor: pointer;
 }
 
-.item-list-sidebar:hover {
-  background: rgb(229 223 223);
-  /* background: var(--light-grey); */
-}
-
 .active-page {
   background: rgb(229 223 223);
   /* background: var(--light-grey); */
 }
 
 .link-page {
+  display: block;
+  border-radius: 7px;
   text-decoration: none;
   color: var(--grey);
 }
 
-/* .label-file-load {
-  display: block;
-  width: 104%;
-  height: 108%;
-  position: absolute;
-  top: -3px;
-  left: -5px; 
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  cursor: pointer;
-} */
+.link-page:hover {
+  background: rgb(229 223 223);
+  /* background: var(--light-grey); */
+}
+
+

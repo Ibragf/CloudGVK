@@ -1,5 +1,12 @@
+import HeaderShowContent from "./HeaderShowContent";
+
 const ShowTrash = (): JSX.Element => {
-  return <div>Trash</div>;
+  return (
+    <>
+      <HeaderShowContent page="Trash" />
+      <div>Trash</div>
+    </>
+  );
 };
 
 export default ShowTrash;

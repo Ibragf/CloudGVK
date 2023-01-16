@@ -6,7 +6,7 @@ import TextInput from "../UI/input/TextInput";
 import PopUp from "./PopUp";
 
 const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
-  const [nameFolder, setNameFolder] = useState<string>("");
+  const [nameFolder, setNameFolder] = useState<string>("New folder");
 
   const writeNameFolder = (e: any): void => {
     setNameFolder(e.target.value);
@@ -26,7 +26,7 @@ const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
           <TextInput
             type="text"
             id="input-create"
-            placeholder="New folder"
+            // placeholder="New folder"
             onChange={writeNameFolder}
             value={nameFolder}
           />

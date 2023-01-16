@@ -64,3 +64,19 @@ body {
 .sidebar-svg {
   font-size: 1.2rem;
 }
+
+.folder-svg {
+  font-size: 7rem;
+  fill: #f7e078;
+}
+
+.file-svg {
+  font-size: 7rem;
+  fill: var(--light-grey);
+}
+
+.name-page-svg {
+  position: absolute;
+  top: 4px;
+  right: -21px;
+}

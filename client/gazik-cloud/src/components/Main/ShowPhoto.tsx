@@ -1,5 +1,12 @@
+import HeaderShowContent from "./HeaderShowContent";
+
 const ShowPhoto = (): JSX.Element => {
-  return <div>Photo</div>;
+  return (
+    <>
+      <HeaderShowContent page="Photo" />
+      <div>Photo</div>
+    </>
+  );
 };
 
 export default ShowPhoto;

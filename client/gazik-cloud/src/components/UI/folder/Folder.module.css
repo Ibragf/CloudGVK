@@ -1,0 +1,13 @@
+.folder {
+  border-radius: 7px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.folder:hover {
+  background: #f5f5f5;
+}
+
+.folderName {
+  text-align: center;
+}

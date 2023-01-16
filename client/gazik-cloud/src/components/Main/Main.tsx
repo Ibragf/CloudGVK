@@ -1,4 +1,3 @@
-import HeaderShowContent from "./HeaderShowContent";
 import ButtonLoad from "./ButtonLoad";
 import ButtonCreate from "./ButtonCreate";
 import SidebarNav from "./SidebarNav";
@@ -15,19 +14,18 @@ import {
 import ShowFiles from "./ShowFiles";
 import ShowTrash from "./ShowTrash";
 import ShowPhoto from "./ShowPhoto";
-import { useState } from "react";
+import ShowAbout from "./ShowAbout";
+import ShowFolder from "./ShowFolder";
 
 const LayoutMain = (): JSX.Element => {
-  const [activePage, setActivePage] = useState<string>("Files");
   return (
     <main className="main">
       <section className="sidebar">
         <ButtonLoad />
         <ButtonCreate />
-        <SidebarNav activePage={activePage} setActivePage={setActivePage}/>
+        <SidebarNav />
       </section>
       <section className="show-content">
-        <HeaderShowContent page={activePage} />
         <Outlet />
       </section>
     </main>
@@ -37,7 +35,9 @@ const LayoutMain = (): JSX.Element => {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<LayoutMain />}>
-      <Route index element={<ShowFiles />} />
+      <Route index element={<ShowAbout />} />
+      <Route path="/files" element={<ShowFiles />} />
+      <Route path="/files/:folderName" element={<ShowFolder />} />
       <Route path="/photo" element={<ShowPhoto />} />
       <Route path="/trash" element={<ShowTrash />} />
     </Route>
@@ -49,3 +49,6 @@ const Main = (): JSX.Element => {
 };
 
 export default Main;
+
+
+
