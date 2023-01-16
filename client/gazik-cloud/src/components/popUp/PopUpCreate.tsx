@@ -8,13 +8,15 @@ import PopUp from "./PopUp";
 const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
   const [nameFolder, setNameFolder] = useState<string>("");
 
+  
   const writeNameFolder = (e: any): void => {
     setNameFolder(e.target.value);
   };
 
 	const createFolder = (): void => {
 		if (!nameFolder) console.log('New Folder');
-		else console.log(nameFolder);
+		else {
+    };
 		setDisplay(false);
 	}
 

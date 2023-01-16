@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import TextInput from "../UI/input/TextInput";
 import AuthButton from "../UI/button/AuthButton";
-import axios from "../../apis/server";
+import { signInPost, signUpPost} from "../../apis/server";
 import { PopUpAuthProps } from "../../interfaces/PopUpAuthProps";
-import FingerprintJS from '@fingerprintjs/fingerprintjs'
+import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
+import { notLoggedIn } from "../../store/userProfileSlice";
 
 const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
-  const fpPromise = FingerprintJS.load();
 
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -20,6 +20,8 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
     "The field should not be empty"
   );
   const [formValid, setFormValid] = useState<boolean>(false);
+  const isLoggedIn = useAppSelector(state => state.authReducer.isLoggedIn);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (emailError || passError) setFormValid(false);
@@ -63,33 +65,15 @@ const PopUpAuth: React.FC<PopUpAuthProps> = ({ type }) => {
 
   const onSubmitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    
     try {
       if (type === "signUp") {
-        const response = await axios.post("/api/signup", {
-          userName: name,
-          email: email,
-          password: password,
-        });
-
-        console.log(response);
+        await signUpPost(name, email, password);
+        await signInPost(email, password);
+        dispatch(notLoggedIn(!isLoggedIn));
       } else {
-
-        const fp = await fpPromise;
-        const result = await fp.get();
-        const response = await axios.post("/api/login", {
-          fingerPrint: result.visitorId,
-          email: email,
-          password: password,
-        });
-        localStorage.setItem('token', response.data);
-
-        const response1 = await axios.get('/WeatherForecast', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        })
-        console.log(response);
-        console.log(response1);
+        await signInPost(email, password);
+        dispatch(notLoggedIn(!isLoggedIn));
       }
     } catch (error: any) {
         console.log(error);    
