@@ -1,9 +1,10 @@
 ﻿using BackendGVK.Models;
+using BackendGVK.Services.Configs;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace BackendGVK.Services.Configs
+namespace BackendGVK.Services
 {
     public class GoogleCaptcha
     {

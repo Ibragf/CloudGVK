@@ -1,8 +1,6 @@
-﻿using BackendGVK.Models;
-using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
-namespace BackendGVK.Services
+namespace BackendGVK.Services.TokenManagerService
 {
     public interface ITokenManager
     {

@@ -22,7 +22,7 @@ namespace BackendGVK.Services
 
         public async Task<string> GenerateAsync(string purpose, UserManager<ApplicationUser> manager, ApplicationUser user)
         {
-            if (user == null || manager == null) return null;
+            if (user == null || manager == null) return null!;
             string token = string.Empty;
             StringBuilder sb = new StringBuilder();
             Random random = new Random();

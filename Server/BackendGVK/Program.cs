@@ -4,12 +4,12 @@ using BackendGVK.Models;
 using BackendGVK.Services;
 using BackendGVK.Services.Configs;
 using BackendGVK.Services.EmailSender;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BackendGVK.Services.TokenManagerService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Configuration.AddUserSecrets<Program>();
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer").Value;
@@ -43,11 +43,12 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITokenManager, TokenManager>();
-builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddTransient(typeof(GoogleCaptcha));
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 

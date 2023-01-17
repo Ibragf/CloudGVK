@@ -1,18 +1,16 @@
 ﻿using BackendGVK.Db;
 using BackendGVK.Models;
 using BackendGVK.Services.Configs;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BackendGVK.Services
+namespace BackendGVK.Services.TokenManagerService
 {
     public class TokenManager : ITokenManager
     {
@@ -29,19 +27,20 @@ namespace BackendGVK.Services
         {
             DateTime dateTime;
             string jwt = GenerateToken(claims, out dateTime);
-            string email = claims.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
+            string email = claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)!.Value;
             string hashFinger = GetHash256(fingerPrint + email);
 
             var result = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == hashFinger);
 
-            if(result != null) {
+            if (result != null)
+            {
                 bool isDeactive = await DeactiveTokenAsync(result.Token);
                 if (isDeactive)
                 {
                     result.Token = jwt;
                     result.Exp = dateTime;
                 }
-                else return null;
+                else return null!;
             }
             else
             {
@@ -62,15 +61,15 @@ namespace BackendGVK.Services
         public async Task<string> RefreshTokenAsync(string token, string fingerPrint)
         {
             var principal = GetClaimsPrincipal(token);
-            if (principal == null) return null;
+            if (principal == null) return null!;
 
-            string email = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email).Value;
+            string email = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)!.Value;
             string hashFinger = GetHash256(fingerPrint + email);
             AuthToken? authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == hashFinger);
-            if (authToken == null || authToken.Token!= token) return null;
+            if (authToken == null || authToken.Token != token) return null!;
 
             bool isDeactivated = await DeactiveTokenAsync(token);
-            if (!isDeactivated) return null;
+            if (!isDeactivated) return null!;
 
             DateTime dateTime;
             string jwt = GenerateToken(principal.Claims, out dateTime);
@@ -91,10 +90,11 @@ namespace BackendGVK.Services
         }
         public async Task<bool> RemoveTokenAsync(string token)
         {
+            if(token == null) return false;
             bool isDeactive = await DeactiveTokenAsync(token);
-            if(!isDeactive) return false;
+            if (!isDeactive) return false;
 
-            AuthToken authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Token==token);
+            AuthToken? authToken = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Token == token);
             if (authToken != null)
             {
                 _dbContext.Remove(authToken);
@@ -113,15 +113,15 @@ namespace BackendGVK.Services
         {
             var principal = GetClaimsPrincipal(token);
             if (principal == null) return false;
-            string utcValue = principal.Claims.FirstOrDefault(x => x.Type == "exp")?.Value;
+            string utcValue = principal.Claims.FirstOrDefault(x => x.Type == "exp")!.Value;
             if (utcValue == null) return false;
 
             double utc;
             try
             {
-                utc = Double.Parse(utcValue);
+                utc = double.Parse(utcValue);
             }
-            catch (Exception ex) { return false; }
+            catch { return false; }
 
             DateTime datetime = UnixTimeStampToDateTime(utc);
             TimeSpan exp = datetime.Subtract(DateTime.UtcNow).Add(new TimeSpan(0, 3, 0));
@@ -152,7 +152,7 @@ namespace BackendGVK.Services
             var jwtSecurityToken = securityToken as JwtSecurityToken;
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
-                return null;
+                return null!;
             }
 
             return principal;

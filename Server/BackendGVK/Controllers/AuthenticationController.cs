@@ -1,22 +1,12 @@
-﻿using BackendGVK.Db;
-using BackendGVK.Models;
+﻿using BackendGVK.Models;
 using BackendGVK.Services;
-using BackendGVK.Services.Configs;
 using BackendGVK.Services.EmailSender;
-using Microsoft.AspNetCore.Authorization;
+using BackendGVK.Services.TokenManagerService;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace BackendGVK.Controllers
 {
@@ -48,7 +38,6 @@ namespace BackendGVK.Controllers
 
             if (result.Succeeded)
             {
-                string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 List<Claim> claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Email, model.Email),
@@ -56,9 +45,11 @@ namespace BackendGVK.Controllers
                 };
                 await _userManager.AddClaimsAsync(user, claims);
 
-
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                await _emailsender.SendEmailAsync(model.Email, "Confirm Email", code);
+
+                string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                string html = _emailsender.GetHtmlForConfirmationToken(code);
+                await _emailsender.SendEmailAsync(model.Email, "Confirm Email", html);
             }
             else
             {

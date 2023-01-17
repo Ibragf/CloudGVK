@@ -3,6 +3,7 @@ using System;
 using BackendGVK.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,42 +11,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendGVK.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230115172811_reboot_database")]
+    partial class reboot_database
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.12");
-
-            modelBuilder.Entity("ApplicationUserDirectoryModel", b =>
-                {
-                    b.Property<string>("AllowedUsersId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("DirectoriesId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("AllowedUsersId", "DirectoriesId");
-
-                    b.HasIndex("DirectoriesId");
-
-                    b.ToTable("ApplicationUserDirectoryModel");
-                });
-
-            modelBuilder.Entity("ApplicationUserFileModel", b =>
-                {
-                    b.Property<string>("AllowedUsersId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("FilesId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("AllowedUsersId", "FilesId");
-
-                    b.HasIndex("FilesId");
-
-                    b.ToTable("ApplicationUserFileModel");
-                });
 
             modelBuilder.Entity("BackendGVK.Models.ApplicationUser", b =>
                 {
@@ -134,73 +106,6 @@ namespace BackendGVK.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Tokens");
-                });
-
-            modelBuilder.Entity("BackendGVK.Models.DirectoryModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<ulong>("Size")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("Directories");
-                });
-
-            modelBuilder.Entity("BackendGVK.Models.FileModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("DirectoryId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("DirectoryModelId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MD5Hash")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<ulong>("Size")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TrustedName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UntrustedName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DirectoryModelId");
-
-                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -331,36 +236,6 @@ namespace BackendGVK.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ApplicationUserDirectoryModel", b =>
-                {
-                    b.HasOne("BackendGVK.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("AllowedUsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BackendGVK.Models.DirectoryModel", null)
-                        .WithMany()
-                        .HasForeignKey("DirectoriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ApplicationUserFileModel", b =>
-                {
-                    b.HasOne("BackendGVK.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("AllowedUsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BackendGVK.Models.FileModel", null)
-                        .WithMany()
-                        .HasForeignKey("FilesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("BackendGVK.Models.AuthToken", b =>
                 {
                     b.HasOne("BackendGVK.Models.ApplicationUser", "User")
@@ -370,22 +245,6 @@ namespace BackendGVK.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BackendGVK.Models.DirectoryModel", b =>
-                {
-                    b.HasOne("BackendGVK.Models.DirectoryModel", "Parent")
-                        .WithMany("Directories")
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
-                });
-
-            modelBuilder.Entity("BackendGVK.Models.FileModel", b =>
-                {
-                    b.HasOne("BackendGVK.Models.DirectoryModel", null)
-                        .WithMany("Files")
-                        .HasForeignKey("DirectoryModelId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -442,13 +301,6 @@ namespace BackendGVK.Migrations
             modelBuilder.Entity("BackendGVK.Models.ApplicationUser", b =>
                 {
                     b.Navigation("RefreshTokens");
-                });
-
-            modelBuilder.Entity("BackendGVK.Models.DirectoryModel", b =>
-                {
-                    b.Navigation("Directories");
-
-                    b.Navigation("Files");
                 });
 #pragma warning restore 612, 618
         }

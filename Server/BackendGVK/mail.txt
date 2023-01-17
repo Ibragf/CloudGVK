@@ -1,0 +1,30 @@
+﻿<div style="display: flex; justify-content: center;">
+      <div
+        style="
+          display: flex;
+          max-width: 400px;
+          text-align: center;
+          min-height: 500px;
+          padding: 1rem;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          background-color: #1f1e32;
+          font-size: 16px;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          color: #fff;
+        "
+        class="message-container"
+      >
+        <p  style="font-weight: 700; display: block; font-size: 1.5em;">Gazik<br />Cloud</p>
+        <p style="display: block;">Ваш код безопасности:</p>
+        <h2 style="display: block; width: 100%; margin: 0; padding: 5px;">23423423</h2>
+        <p style="display: block;">
+          Если вы не запрашивали код, перейдите на страницу
+          <a style="color: blue" href="">Моя учетная запись</a> и смените свой
+          пароль
+        </p>
+        <p style="display: block;">Благодарим за помощь в поддержании безопасности учетной записи</p>
+        <p style="display: block;">Команда Gazik Cloud</p>
+      </div>
+    </div>
