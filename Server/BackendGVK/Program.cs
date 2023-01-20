@@ -2,6 +2,7 @@ using BackendGVK.Db;
 using BackendGVK.Extensions;
 using BackendGVK.Models;
 using BackendGVK.Services;
+using BackendGVK.Services.CloudService;
 using BackendGVK.Services.Configs;
 using BackendGVK.Services.EmailSender;
 using BackendGVK.Services.TokenManagerService;
@@ -16,6 +17,12 @@ builder.Configuration.AddUserSecrets<Program>();
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer").Value;
 var audience = builder.Configuration.GetSection("JwtSettings:Audience").Value;
 var secretKey = builder.Configuration.GetSection("JwtSettings:SecretKey").Value;
+
+var graphClient = new BoltGraphClient(
+        new Uri(builder.Configuration.GetConnectionString("Neo4j")),
+        builder.Configuration.GetSection("Neo4jSettings:Login").Value,
+        builder.Configuration.GetSection("Neo4jSettings:Password").Value);
+await graphClient.ConnectAsync();
 // Add services to the container.
 builder.Services.Configure<SmtpServerSettings>(builder.Configuration.GetSection("SmtpServerAccess"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -47,10 +54,8 @@ builder.Services.AddScoped<ITokenManager, TokenManager>();
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddTransient(typeof(GoogleCaptcha));
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
-builder.Services.AddSingleton<IGraphClient>(new BoltGraphClient(
-    new Uri(builder.Configuration.GetConnectionString("Neo4j")),
-    builder.Configuration.GetSection("Neo4jSettings:Login").Value,
-    builder.Configuration.GetSection("Neo4jSettings:Password").Value));
+builder.Services.AddSingleton<ICloud, CloudManager>();
+builder.Services.AddSingleton<IGraphClient>(graphClient);
 
 var app = builder.Build();
 

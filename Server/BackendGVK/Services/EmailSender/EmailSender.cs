@@ -35,7 +35,7 @@ namespace BackendGVK.Services.EmailSender
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
-                Text = html
+                Text = message
             };
 
             using (var client = new SmtpClient())

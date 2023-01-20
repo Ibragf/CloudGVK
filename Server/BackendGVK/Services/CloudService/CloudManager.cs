@@ -1,6 +1,8 @@
-﻿using BackendGVK.Db;
+﻿using BackendGVK.Controllers;
+using BackendGVK.Db;
 using BackendGVK.Models;
 using Microsoft.EntityFrameworkCore;
+using Neo4j.Driver;
 using Neo4jClient;
 using Neo4jClient.Transactions;
 
@@ -13,26 +15,24 @@ namespace BackendGVK.Services.CloudService
         {
             _clientGraph = clientGraph;
         }
-        public async Task<bool> AddAsync(ApplicationUser user, Element element, string directory)
+        public async Task<bool> AddFileAsync(string userId, FileModel file, string destination)
         {
-            if (element == null || directory == null) throw new ArgumentNullException();
+            if (file == null || destination == null || userId == null) throw new ArgumentNullException();
 
             var results = await _clientGraph.Cypher
-                .OptionalMatch("(:User { Id: {id} })-[r*]->(d:{directory} { UntrustedName : {dirname} }")
-                .Merge("(d)-[:HAS]->(e:{type} {el} )")
+                .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }}")
+                .Merge($"(d)-[:HAS]->(f:{ElementTypes.File} $fileInstance )")
                 .OnCreate()
-                .Set("isAdded = true")
+                .Set("f.isAdded = true")
                 .OnMatch()
-                .Set("isAdded = false")
+                .Set("f.isAdded = false")
                 .WithParams(new
                 {
-                    id = user.Id,
-                    type = element.Type.ToString(),
-                    directory = ElementTypes.Directory.ToString(),
-                    dirname = directory,
-                    el = element
+                    id = userId,
+                    dirname = destination,
+                    fileInstance = file
                 })
-                .Return(e => e.As<Element>().isAdded)
+                .Return(e => e.As<FileModel>().isAdded)
                 .ResultsAsync;
 
             bool result = results.FirstOrDefault();
@@ -40,17 +40,42 @@ namespace BackendGVK.Services.CloudService
             return result;
         }
 
-        public async Task<bool> ChangeNameAsync(ApplicationUser user, string oldName, string currentName, ElementTypes type)
+        public async Task<bool> AddDirectoryAsync(string userId, DirectoryModel dir, string destination)
         {
-            if (user == null || oldName == null || currentName == null) throw new ArgumentNullException();
+            if (dir == null || destination == null || userId == null) throw new ArgumentNullException();
+
+            var results = await _clientGraph.Cypher
+                .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }}")
+                .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory} $dirInstance )")
+                .OnCreate()
+                .Set("nd.isAdded = true")
+                .OnMatch()
+                .Set("nd.isAdded = false")
+                .WithParams(new
+                {
+                    id = userId,
+                    dirname = destination,
+                    dirInstance = dir
+                })
+                .Return(e => e.As<DirectoryModel>().isAdded)
+                .ResultsAsync;
+
+            bool result = results.FirstOrDefault();
+
+            return result;
+        }
+
+        public async Task<bool> ChangeNameAsync(string userId, string oldName, string currentName, ElementTypes type)
+        {
+            if (userId == null || oldName == null || currentName == null) throw new ArgumentNullException();
             if(oldName=="home") return false;
 
             var results = await _clientGraph.Cypher
-                .OptionalMatch("(:User {Id: {id} })-[*]->(e:{type} {UntrustedName : {name} })")
-                .Set("e.UntrustedName = {curName}")
+                .OptionalMatch($"(:User {{Id: $id }})-[*]->(e:{type} {{UntrustedName : $name }})")
+                .Set("e.UntrustedName = $curName")
                 .WithParams(new
                 {
-                    id = user.Id,
+                    id = userId,
                     type = type.ToString(),
                     name = oldName,
                     curName = currentName
@@ -64,64 +89,79 @@ namespace BackendGVK.Services.CloudService
             return true;
         }
 
-        public async Task<IEnumerable<Element>> GetElementsAsync(ApplicationUser user, string directory)
+        public async Task<OutputElements> GetElementsAsync(string userId, string directory)
         {
-            if (user == null || directory == null) throw new ArgumentNullException();
-            List<Element> result;
+            if (userId == null || directory == null) throw new ArgumentNullException();
 
             if (directory == "home")
             {
                 var res = await _clientGraph.Cypher
-                .OptionalMatch("(u:User { Id : {id} })->[:HAS]->()-[:HAS]->(elements)")
-                .WithParam("id",user.Id)
-                .Return((elements) => elements.CollectAs<Element>())
-                .Union()
-                .OptionalMatch("(u:User { Id : {id} })-[:ACCESS]->(shared)")
+                .OptionalMatch($"(u:User {{ Id : $id }})-[:HAS]->()-[:HAS]->(files:{ElementTypes.File})")
+                .OptionalMatch($"(u)-[:HAS]->()-[:HAS]->(dirs:{ElementTypes.Directory})")
+                .OptionalMatch($"(u)-[:ACCESS]->(shared:{ElementTypes.Directory})")
                 .Set("shared.isShared = true")
-                .WithParam("id", user.Id)
-                .Return(shared => shared.CollectAs<Element>())
+                .WithParam("id",userId)
+                .Return((files, dirs, shared) => new {
+                    Files = files.CollectAs<FileModel>(),
+                    Directories = dirs.CollectAs<DirectoryModel>(),
+                    Shared = shared.CollectAs<DirectoryModel>()
+                 })
                 .ResultsAsync;
 
-                result = new();
                 var elements = res.FirstOrDefault();
                 if (elements == null) return null!;
 
-                result.AddRange(elements);
+                var output = new OutputElements
+                {
+                    Files = elements.Files,
+                    Directories = elements.Directories,
+                    Shared = elements.Shared
+                };
+
+                return output;
             }
             else
             {
                 var res = await _clientGraph.Cypher
-                    .OptionalMatch("(u:User { Id: {id} })-[*]->(d:{dirType} { UntrustedName : {dirName} })")
-                    .OptionalMatch("(d)-[:HAS]->(elements)")
+                    .OptionalMatch($"(u:User {{ Id: $id }})-[*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirName }})")
+                    .OptionalMatch($"(d)-[:HAS]->(files:{ElementTypes.File})")
+                    .OptionalMatch($"(d)-[:HAS]->(dirs:{ElementTypes.Directory})")
                     .WithParams(new
                     {
-                        id = user.Id,
-                        dirType = ElementTypes.Directory.ToString(),
+                        id = userId,
                         dirName = directory
                     })
-                    .Return(elements => elements.CollectAs<Element>()).ResultsAsync;
+                    .Return((files, dirs) => new
+                    {
+                        Files = files.CollectAs<FileModel>(),
+                        Directories = dirs.CollectAs<DirectoryModel>(),
+                    })
+                    .ResultsAsync;
 
-                result = new();
                 var elements = res.FirstOrDefault();
                 if (elements == null) return null!;
 
-                result.AddRange(elements);
-            }
+                var output = new OutputElements
+                {
+                    Files = elements.Files,
+                    Directories = elements.Directories
+                };
 
-            return result;
+                return output;
+            }
         }
 
-        public async Task<string> GetPathAsync(ApplicationUser user, string name, ElementTypes type)
+        public async Task<string> GetPathAsync(string userId, string name, ElementTypes type)
         {
-            if (user == null || name == null) throw new ArgumentNullException();
+            if (userId == null || name == null) throw new ArgumentNullException();
 
             var res = await _clientGraph.Cypher
-                .Match("(u:User { Id : {id} })-[*]->(e:{type} { UntrustedName : {ename} })")
+                .Match($"(u:User {{ Id : $id }})-[*]->(e:{type} {{ UntrustedName : $name }})")
                 .WithParams(new
                 {
-                    id = user.Id,
+                    id = userId,
                     type = type.ToString(),
-                    ename = name
+                    name
                 })
                 .Return(e => e.As<Element>().Path)
                 .ResultsAsync;
@@ -129,24 +169,22 @@ namespace BackendGVK.Services.CloudService
             return res.FirstOrDefault()!;
         }
 
-        public async Task MoveToAsync(ApplicationUser user, string name, string directoryDestination, ElementTypes type)
+        public async Task MoveToAsync(string userId, string name, string directoryDestination, ElementTypes type)
         {
-            if (user == null || name == null || directoryDestination == null) throw new ArgumentNullException();
+            if (userId == null || name == null || directoryDestination == null) throw new ArgumentNullException();
 
             var txcClient = (ITransactionalGraphClient)_clientGraph;
             using (var tx = txcClient.BeginTransaction())
             {
                 await _clientGraph.Cypher
-                    .OptionalMatch("(u:User { Id : {id} })-[:HAS*]->(e:{type} { UntrustedName :{ename} })")
+                    .OptionalMatch($"(u:User {{ Id : $id }})-[:HAS*]->(e:{type} {{ UntrustedName :$ename }})")
                     .Match("(e)<-[r:HAS]-()")
-                    .OptionalMatch("(u)-[:HAS*]->(d:{dirtype} { UntrustedName :{destination} })")
+                    .OptionalMatch($"(u)-[:HAS*]->(d:{ElementTypes.Directory} {{ UntrustedName : $destination }})")
                     .WithParams(new
                     {
-                        id = user.Id,
-                        type = type.ToString(),
+                        id = userId,
                         ename = name,
                         destination = directoryDestination,
-                        dirtype = ElementTypes.Directory.ToString()
                     })
                     .Delete("r")
                     .Create("(d)-[:HAS]->(e)")
@@ -155,47 +193,50 @@ namespace BackendGVK.Services.CloudService
                 await tx.CommitAsync();
             }
         }
-        public async Task RemoveAsync(ApplicationUser user, string name, ElementTypes type)
+
+        public async Task RemoveAsync(string userId, string name, ElementTypes type)
         {
-            if (user == null || name==null) throw new ArgumentNullException();
+            if (userId == null || name==null) throw new ArgumentNullException();
 
             await _clientGraph.Cypher
-                .Match("(:User { Id : {id} })-[*]->(e:{type} { UntrustedName : {ename} })")
+                .Match($"(:User {{ Id : $id }})-[*]->(e:{type} {{ UntrustedName : $ename }})")
                 .OptionalMatch("(e)-[*]->(x)")
                 .WithParams(new
                 {
-                    id = user.Id,
-                    type = type.ToString(),
+                    id = userId,
                     ename = name,
                 })
                 .DetachDelete("x,e")
                 .ExecuteWithoutResultsAsync();
         }
-        public async Task CopyToAsync(ApplicationUser user, string name, string destination, ElementTypes type)
+
+        public async Task CopyToAsync(string userId, string name, string destination, ElementTypes type)
         {
+            if (userId == null || name == null || destination == null) throw new ArgumentNullException();
+
             await _clientGraph.Cypher
-                .OptionalMatch("(u:User { Id : {id} })-[*]->(e:{type} { UntrustedName : {ename} })")
-                .OptionalMatch("(u)-[*]->(d:{dirType} { UntrustedName : {destination} })")
+                .OptionalMatch($"(u:User {{ Id : $id }})-[*]->(e:{type} {{ UntrustedName : $ename }})")
+                .OptionalMatch($"(u)-[*]->(d:{ElementTypes.Directory} {{ UntrustedName : $destination }})")
                 .Merge("(d)-[:HAS]->(e)")
                 .WithParams(new
                 {
-                    id = user.Id,
-                    type = type.ToString(),
+                    id = userId,
                     ename = name,
-                    dirType = ElementTypes.Directory.ToString(),
                     destination
                 })
                 .ExecuteWithoutResultsAsync();
         }
-        public async Task MoveToAccessModeAsync(ApplicationUser user, string name, string destination, ElementTypes type)
+
+        public async Task MoveToAccessModeAsync(string userId, string elementId, string destinationId , ElementTypes type)
         {
+            if (userId == null || elementId == null || destinationId == null) throw new ArgumentNullException();
+
             var element=await _clientGraph.Cypher
-                .OptionalMatch("(u:User { Id : {id} })-[:ACCESS]->()-[*]->(e:{type} { Id : {elementId} })")
+                .OptionalMatch($"(u:User {{ Id : $id }})-[:ACCESS]->()-[*]->(e:{type} {{ Id : $elementId }})")
                 .WithParams(new
                 {
-                    id = user.Id,
-                    type = type.ToString(),
-                    elementId = name
+                    id = userId,
+                    elementId
                 })
                 .Return(e => e.As<Element>().Id)
                 .ResultsAsync;
@@ -205,21 +246,19 @@ namespace BackendGVK.Services.CloudService
             if (targetId != null)
             {
                 var directory = await _clientGraph.Cypher
-                    .OptionalMatch("(:User { Id : {id} })-[:ACCESS]->()-[*]->(e:{type} { Id : {elementId} })")
+                    .OptionalMatch($"(:User {{ Id : $id }})-[:ACCESS]->()-[*]->(d:{ElementTypes.Directory} {{ Id : $destId }})")
                     .WithParams(new
                     {
-                        id = user.Id,
-                        type = ElementTypes.Directory.ToString(),
-                        elementId = destination
+                        id = userId,
+                        destId = destinationId
                     })
                     .Return(e => e.As<Element>().Id)
                     .Union()
-                    .OptionalMatch("(:User { Id : {id} })-[:ACCESS]->(d:{dirType} { Id : {elementId} })")
+                    .OptionalMatch($"(:User {{ Id : $id }})-[:ACCESS]->(d:{ElementTypes.Directory} {{ Id : $destId2 }})")
                     .WithParams(new
                     {
-                        id = user.Id,
-                        dirType = ElementTypes.Directory.ToString(),
-                        elementId = destination
+                        id = userId,
+                        destId2 = destinationId
                     })
                     .Return(d => d.As<Element>().Id)
                     .ResultsAsync;
@@ -228,14 +267,12 @@ namespace BackendGVK.Services.CloudService
                 if(dirTargetId != null)
                 {
                     await _clientGraph.Cypher
-                        .Match("(e:{type} { Id : {elementId} })")
+                        .Match($"(e:{type} {{ Id : $elementId }})")
                         .Match("(e)<-[r:HAS]-()")
-                        .Match("(d:{dirType} { Id : {dirId} })")
+                        .Match($"(d:{ElementTypes.Directory} {{ Id : $dirId }})")
                         .WithParams(new
                         {
                             elementId = targetId,
-                            type= type.ToString(),
-                            dirType = ElementTypes.Directory.ToString(),
                             dirId = dirTargetId
                         })
                         .Delete("r")
@@ -248,6 +285,66 @@ namespace BackendGVK.Services.CloudService
         public async Task SaveChangesAsync()
         {
 
+        }
+
+        public async Task AddAccessAsync(string elementId, string userId)
+        {
+            if (elementId == null || userId == null) throw new ArgumentNullException();
+
+            await _clientGraph.Cypher
+                .Match($"(e:Directory {{ Id : $elementId }})")
+                .Match("(u:User { Id : $id }")
+                .Merge("(u)-[:ACCESS]->(e)")
+                .WithParams(new
+                {
+                    id = userId,
+                    elementId,
+                })
+                .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task RemoveAccessAsync(string elementId, string userId)
+        {
+            if (elementId == null || userId == null) throw new ArgumentNullException();
+
+            await _clientGraph.Cypher
+                .Match($"(e:Directory {{ Id : $elementId }})")
+                .Match("(u:User { Id : $id }")
+                .OptionalMatch("(u)-[r:ACCESS]->(e)")
+                .WithParams(new
+                {
+                    id = userId,
+                    elementId,
+                })
+                .Delete("r")
+                .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task CreateHomeDirAsync(string userId)
+        {
+            if (userId == null) throw new ArgumentNullException();
+
+            await _clientGraph.Cypher
+                .Merge($"(u:User {{ Id: $id }})-[:HAS]->(d:{ElementTypes.Directory} {{ UntrustedName: \"home\" }})")
+                .WithParams(new
+                {
+                    id = userId,
+                })
+                .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task RemoveHomeDirAsync(string userId)
+        {
+            if (userId == null) throw new ArgumentNullException();
+
+            await _clientGraph.Cypher
+                .OptionalMatch($"(u:User {{ Id:  $id }})-[:HAS]->(d:{ElementTypes.Directory} {{ UntrustedName : \"home\" }}")
+                .WithParams(new
+                {
+                    id = userId,
+                })
+                .DetachDelete("d,u")
+                .ExecuteWithoutResultsAsync();
         }
     }
 }

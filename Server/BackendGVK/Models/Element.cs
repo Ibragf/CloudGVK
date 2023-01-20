@@ -1,6 +1,6 @@
 ﻿namespace BackendGVK.Models
 {
-    public abstract class Element
+    public class Element
     {
         public string Id { get; set; } = null!;
         public virtual ElementTypes Type { get; }

@@ -97,3 +97,6 @@ D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\MailKit.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\MimeKit.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\BouncyCastle.Crypto.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\Newtonsoft.Json.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\Microsoft.Bcl.AsyncInterfaces.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\Neo4j.Driver.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\bin\Release\net6.0\Neo4jClient.dll

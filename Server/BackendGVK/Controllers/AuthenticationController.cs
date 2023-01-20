@@ -1,5 +1,6 @@
 ﻿using BackendGVK.Models;
 using BackendGVK.Services;
+using BackendGVK.Services.CloudService;
 using BackendGVK.Services.EmailSender;
 using BackendGVK.Services.TokenManagerService;
 using Microsoft.AspNetCore.Cors;
@@ -103,6 +104,7 @@ namespace BackendGVK.Controllers
             if (result.Succeeded)
             {
                 var claims = await _userManager.GetClaimsAsync(user);
+                claims.Add(new Claim("Id", user.Id));
                 token = await _tokenManager.GenerateTokenAsync(user.Id, claims, model.FingerPrint);
                 if (token == null) return BadRequest();
             }
@@ -141,14 +143,18 @@ namespace BackendGVK.Controllers
         }
 
         [HttpGet("confirm/email")]
-        public async Task<IActionResult> ConfirmEmail(string code, string userEmail)
+        public async Task<IActionResult> ConfirmEmail(string code, [EmailAddress] string userEmail, [FromServices] ICloud cloud)
         {
             bool isSuccess = true;
             var user = await _userManager.FindByEmailAsync(userEmail);
             if(user != null)
             {
                 var result = await _userManager.ConfirmEmailAsync(user, code);
-                if (result.Succeeded) return Ok();
+                if (result.Succeeded)
+                {
+                    await cloud.CreateHomeDirAsync(user.Id);
+                    return Ok();
+                }
                 else
                 {
                     isSuccess = false;
