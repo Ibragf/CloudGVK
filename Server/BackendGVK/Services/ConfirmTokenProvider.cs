@@ -22,7 +22,7 @@ namespace BackendGVK.Services
 
         public async Task<string> GenerateAsync(string purpose, UserManager<ApplicationUser> manager, ApplicationUser user)
         {
-            if (user == null || manager == null) return null!;
+            if (user == null || manager == null || purpose==null) throw new ArgumentNullException();
             string token = string.Empty;
             StringBuilder sb = new StringBuilder();
             Random random = new Random();
@@ -54,6 +54,7 @@ namespace BackendGVK.Services
 
         public async Task<bool> ValidateAsync(string purpose, string token, UserManager<ApplicationUser> manager, ApplicationUser user)
         {
+            if (purpose == null || manager == null || token == null || user==null) throw new ArgumentNullException();
             var result = await _dbContext.UserTokens.FirstOrDefaultAsync(x => x.Value == token && x.Name == purpose && x.UserId == user.Id);
             if (result == null) return false;
             else

@@ -7,6 +7,7 @@ using BackendGVK.Services.EmailSender;
 using BackendGVK.Services.TokenManagerService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Neo4jClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,10 @@ builder.Services.AddScoped<ITokenManager, TokenManager>();
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddTransient(typeof(GoogleCaptcha));
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+builder.Services.AddSingleton<IGraphClient>(new BoltGraphClient(
+    new Uri(builder.Configuration.GetConnectionString("Neo4j")),
+    builder.Configuration.GetSection("Neo4jSettings:Login").Value,
+    builder.Configuration.GetSection("Neo4jSettings:Password").Value));
 
 var app = builder.Build();
 
@@ -60,6 +65,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseCors("AllowAnyOrigin");
+
 app.UseAuthentication();
 app.UseTokenManager();  
 app.UseAuthorization();
