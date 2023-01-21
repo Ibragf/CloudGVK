@@ -1,11 +1,13 @@
 using BackendGVK.Db;
 using BackendGVK.Extensions;
 using BackendGVK.Models;
+using BackendGVK.Policy.isAllowed;
 using BackendGVK.Services;
 using BackendGVK.Services.CloudService;
 using BackendGVK.Services.Configs;
 using BackendGVK.Services.EmailSender;
 using BackendGVK.Services.TokenManagerService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Neo4jClient;
@@ -27,8 +29,12 @@ await graphClient.ConnectAsync();
 builder.Services.Configure<SmtpServerSettings>(builder.Configuration.GetSection("SmtpServerAccess"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<GoogleCaptchaSettings>(builder.Configuration.GetSection("GoogleCaptchaConfig"));
+
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite")));
 builder.Services.AddControllers();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("isAllowed", policy =>
+        policy.AddRequirements(new isAllowedRequirement())));
 builder.Services.AddJwtAuthentication(issuer, audience, secretKey);
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -42,6 +48,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedEmail = true;
 }).AddEntityFrameworkStores<AppDbContext>().AddTokenProvider<ConfirmTokenProvider>("Default");
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.InstanceName = builder.Configuration.GetConnectionString("Redis:Instance");
@@ -50,12 +57,18 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<ITokenManager, TokenManager>();
-builder.Services.AddSingleton<IEmailSender, EmailSender>();
-builder.Services.AddTransient(typeof(GoogleCaptcha));
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+
+builder.Services.AddTransient(typeof(GoogleCaptcha));
+
+builder.Services.AddScoped<ITokenManager, TokenManager>();
+
+builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddSingleton<ICloud, CloudManager>();
 builder.Services.AddSingleton<IGraphClient>(graphClient);
+builder.Services.AddSingleton<IAuthorizationHandler, isOwnerHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, HasAccessHandler>();
+
 
 var app = builder.Build();
 

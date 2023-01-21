@@ -152,7 +152,7 @@ namespace BackendGVK.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, code);
                 if (result.Succeeded)
                 {
-                    await cloud.CreateHomeDirAsync(user.Id);
+                    await cloud.CreateHomeDirAsync(user.Id, userEmail);
                     return Ok();
                 }
                 else

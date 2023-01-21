@@ -1,4 +1,6 @@
-﻿namespace BackendGVK.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BackendGVK.Models
 {
     public class Element
     {

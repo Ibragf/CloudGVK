@@ -5,12 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Neo4j.Driver;
 using Neo4jClient;
 using Neo4jClient.Transactions;
+using System.Security.Claims;
 
 namespace BackendGVK.Services.CloudService
 {
     public class CloudManager : ICloud
     {
         private readonly IGraphClient _clientGraph;
+
         public CloudManager(IGraphClient clientGraph)
         {
             _clientGraph = clientGraph;
@@ -21,7 +23,7 @@ namespace BackendGVK.Services.CloudService
 
             var results = await _clientGraph.Cypher
                 .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }}")
-                .Merge($"(d)-[:HAS]->(f:{ElementTypes.File} $fileInstance )")
+                .Merge($"(d)-[:HAS]->(f:{ElementTypes.File} {{ $fileInstance }})")
                 .OnCreate()
                 .Set("f.isAdded = true")
                 .OnMatch()
@@ -46,7 +48,7 @@ namespace BackendGVK.Services.CloudService
 
             var results = await _clientGraph.Cypher
                 .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }}")
-                .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory} $dirInstance )")
+                .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory} {{ $dirInstance }})")
                 .OnCreate()
                 .Set("nd.isAdded = true")
                 .OnMatch()
@@ -287,22 +289,6 @@ namespace BackendGVK.Services.CloudService
 
         }
 
-        public async Task AddAccessAsync(string elementId, string userId)
-        {
-            if (elementId == null || userId == null) throw new ArgumentNullException();
-
-            await _clientGraph.Cypher
-                .Match($"(e:Directory {{ Id : $elementId }})")
-                .Match("(u:User { Id : $id }")
-                .Merge("(u)-[:ACCESS]->(e)")
-                .WithParams(new
-                {
-                    id = userId,
-                    elementId,
-                })
-                .ExecuteWithoutResultsAsync();
-        }
-
         public async Task RemoveAccessAsync(string elementId, string userId)
         {
             if (elementId == null || userId == null) throw new ArgumentNullException();
@@ -320,17 +306,34 @@ namespace BackendGVK.Services.CloudService
                 .ExecuteWithoutResultsAsync();
         }
 
-        public async Task CreateHomeDirAsync(string userId)
+        public async Task CreateHomeDirAsync(string userId, string email)
         {
-            if (userId == null) throw new ArgumentNullException();
+            if (userId == null || email == null) throw new ArgumentNullException();
 
-            await _clientGraph.Cypher
-                .Merge($"(u:User {{ Id: $id }})-[:HAS]->(d:{ElementTypes.Directory} {{ UntrustedName: \"home\" }})")
+            if (await ExistsUserAsync(email))
+            {
+                await _clientGraph.Cypher
+                .Match("(u:User { Email = $email})")
+                .Set("(u.Id = $id")
+                .Merge($"(u)-[:HAS]->(d:{ElementTypes.Directory} {{ UntrustedName: \"home\" }})")
                 .WithParams(new
                 {
                     id = userId,
+                    email
                 })
                 .ExecuteWithoutResultsAsync();
+            }
+            else
+            {
+                await _clientGraph.Cypher
+                .Merge($"(u:User {{ Id: $id , Email : $email }})-[:HAS]->(d:{ElementTypes.Directory} {{ UntrustedName: \"home\" }})")
+                .WithParams(new
+                {
+                    id = userId,
+                    email
+                })
+                .ExecuteWithoutResultsAsync();
+            }
         }
 
         public async Task RemoveHomeDirAsync(string userId)
@@ -345,6 +348,132 @@ namespace BackendGVK.Services.CloudService
                 })
                 .DetachDelete("d,u")
                 .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task<bool> isOwnerAsync(string userId, string elementId, ElementTypes type)
+        {
+            return await isAllowedNode(true, userId, elementId, type);
+        }
+
+        public async Task<bool> HasAccessAsync(string userId, string elementId, ElementTypes type)
+        {
+            return await isAllowedNode(false, userId, elementId, type);
+        }
+
+        private async Task<bool> isAllowedNode(bool ownerCheck, string userId, string elementId,  ElementTypes type)
+        {
+            string r = "[*]";
+            if (ownerCheck) r = "[:HAS*]";
+
+            var values = await _clientGraph.Cypher
+                .OptionalMatch("(u:User { Id : $id })")
+                .OptionalMatch($"(e:{type} {{ Id : $elementId }}")
+                .Call($"exists((u)-[{r}]->(e) as result")
+                .WithParams(new { id = userId, elementId })
+                .Return(result => result.As<bool>())
+                .ResultsAsync;
+
+            bool value = values.FirstOrDefault();
+
+            return value;
+        }
+
+        public async Task GrantAccessForAsync(ClaimsPrincipal principal, string toEmail, DirectoryModel directory)
+        {
+            if (principal == null || toEmail == null || directory == null) throw new ArgumentNullException();
+
+            string fromName = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value!;
+            string fromEmail = principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value!;
+            if (fromName == null || fromEmail == null) throw new NullReferenceException("Claims are invalid");
+
+            InvitationModel invitation = new InvitationModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                DirectoryId = directory.Id,
+                Directory = directory.UntrustedName,
+                From = fromName,
+                Size = directory.Size
+            };
+
+            await _clientGraph.Cypher
+                .Match("(from:User { Email : $from })")
+                .Merge("(to:User { Email : $to })")
+                .Merge("(from)-[:INVITED {$invitation} ]->(to)")
+                .WithParams(new
+                {
+                    from = fromEmail,
+                    to = toEmail,
+                    invitation
+                })
+                .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task<bool> ExistsUserAsync(string email)
+        {
+            if(email == null) throw new ArgumentNullException();
+
+            var values = await _clientGraph.Cypher
+                .OptionalMatch("(u:User { Email : $email }")
+                .WithParam("email", email)
+                .Return(u => u.As<string>())
+                .ResultsAsync;
+
+            bool value = values.FirstOrDefault() == null ? false : true;
+
+            return value;
+        }
+
+        public async Task<IEnumerable<InvitationModel>> GetInvitationsAsync(string userId)
+        {
+            if(userId == null) throw new ArgumentNullException();
+
+            var invitations = await _clientGraph.Cypher
+                .Match("(u:User { Id : $id })")
+                .OptionalMatch("(u)<-[r:INVITED]-()")
+                .WithParam("id", userId)
+                .Return(r => r.As<InvitationModel>())
+                .ResultsAsync;
+
+            return invitations;
+        }
+
+        public async Task AcceptInvitationAsync(string toUserId, InvitationModel invitation)
+        {
+            if (toUserId == null || invitation == null) throw new ArgumentNullException();
+
+            string invId = await DeleteInvitationAsync(invitation);
+            if(invId == null) return;
+
+            await _clientGraph.Cypher
+                .Match("()-[r:INVITED { Id : $invId}]->()")
+                .Match("(u:User { Id : $userId })")
+                .Match($"(d:{ElementTypes.Directory} {{ Id : $dirId }})")
+                .Merge("(u)-[:ACCESS]->(d)")
+                .WithParams(new
+                {
+                    userId = toUserId,
+                    invId = invitation.Id,
+                    dirId = invitation.DirectoryId
+                })
+                .Delete("r")
+                .ExecuteWithoutResultsAsync();
+        }
+
+        public async Task<string> DeleteInvitationAsync(InvitationModel invitation)
+        {
+            if(invitation== null) throw new ArgumentNullException();
+
+            var result = await _clientGraph.Cypher
+                .OptionalMatch("()<-[r:INVITED {Id : $inviteId}]-()")
+                .WithParams(new
+                {
+                    inviteId = invitation.Id
+                })
+                .Delete("r")
+                .Return(r => r.As<InvitationModel>().Id)
+                .ResultsAsync;
+
+            return result.FirstOrDefault()!;
         }
     }
 }
