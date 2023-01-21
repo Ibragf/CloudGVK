@@ -1,0 +1,26 @@
+.signIn-form {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    padding: 30px 20px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: space-between;
+    text-align: center;
+
+    font-size: 1.2rem;
+    background-color: #2c2a3b;
+    border-radius: 5px;
+  
+    backface-visibility: hidden;
+    transition: .5s linear;
+    transform: rotateY(180deg);
+  }
+  
+  .signIn-form_rotated {
+    transform: rotateY(0);
+  }

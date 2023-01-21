@@ -2,6 +2,8 @@
     padding: 10px;
     width: 100%;
 
-    border-radius: 50px;
+    border-radius: 2px;
+    background-color: #1f1e28;
+    color: #b7b5c1;
     border: none;
 }

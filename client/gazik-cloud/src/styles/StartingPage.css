@@ -1,0 +1,26 @@
+.starting-page {
+    height: 100vh;
+
+    color: #b7b5c1;
+    background-color: #1f1e28;
+}
+
+.form-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    min-height: 150px;
+    width: 400px;
+    transition: .5s linear;
+}
+
+.form__inner {
+    position: relative;
+    min-height: 300px;
+    perspective: 1500rem;
+}
+
+
+
