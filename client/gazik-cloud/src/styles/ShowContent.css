@@ -95,22 +95,22 @@
 /* Main Show Content */
 /* ===================== */
 
-.list-client-content {
+.show-content-list {
   margin-top: 10px;
   display: flex;
   gap: 10px;
 }
 
-.item-list-client-content {
+.storage-item {
   border-radius: 7px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.item-list-client-content:hover {
+.storage-item:hover {
   background: #f5f5f5;
 }
 
-.item-list-client-content .item-name {
+.storage-item .item-name {
   text-align: center;
 }

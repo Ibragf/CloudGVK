@@ -1,0 +1,23 @@
+{
+  "files": [
+    { "id": 1, "type": "file", "name": "file.txt" },
+    {
+      "id": 2,
+      "type": "folder",
+      "name": "Newfolder1",
+      "body": [
+        { "id": 3, "type": "file", "name": "file1.txt" },
+        { "id": 4, "type": "folder", "name": "New folder 2" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "folder",
+      "name": "Newfolder2",
+      "body": [
+        { "id": 5, "type": "file", "name": "file1.txt" },
+        { "id": 6, "type": "folder", "name": "New folder 2" }
+      ]
+    }
+  ]
+}

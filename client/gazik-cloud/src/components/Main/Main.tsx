@@ -10,8 +10,9 @@ import {
   createRoutesFromElements,
   Outlet,
   Route,
+  Routes,
 } from "react-router-dom";
-import ShowFiles from "./ShowFiles";
+import ShowStorage from "./ShowStorage";
 import ShowTrash from "./ShowTrash";
 import ShowPhoto from "./ShowPhoto";
 import ShowAbout from "./ShowAbout";
@@ -36,10 +37,10 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<LayoutMain />}>
       <Route index element={<ShowAbout />} />
-      <Route path="/files" element={<ShowFiles />} />
-      <Route path="/files/:folderName" element={<ShowFolder />} />
-      <Route path="/photo" element={<ShowPhoto />} />
-      <Route path="/trash" element={<ShowTrash />} />
+      <Route path="files" element={<ShowStorage />} />
+      <Route path="files/*" element={<ShowFolder />} />
+      <Route path="photo" element={<ShowPhoto />} />
+      <Route path="trash" element={<ShowTrash />} />
     </Route>
   )
 );

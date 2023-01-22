@@ -1,11 +1,10 @@
 import { DetailedHTMLProps, HtmlHTMLAttributes } from "react";
+import { UserStorageItem } from "../store/interfaces/IUserStorage";
 
-export interface ItemListClientFilesProps
+export interface StorageItemProps
   extends DetailedHTMLProps<
     HtmlHTMLAttributes<HTMLDivElement>,
     HTMLDivElement
   > {
-  type: "folder" | "file";
-  name: string;
-  body?: ItemListClientFilesProps[];
+    storageItem: UserStorageItem;
 }
