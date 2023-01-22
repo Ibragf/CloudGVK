@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 
 namespace BackendGVK.Controllers
@@ -23,6 +24,7 @@ namespace BackendGVK.Controllers
             _cloudManager = cloud;
         }
         [HttpGet("accept")]
+        
         public async Task<IActionResult> AcceptInvitation(InvitationModel invitation)
         {
             string id = GetUserId();
@@ -38,6 +40,9 @@ namespace BackendGVK.Controllers
         {
             string id = GetUserId();
             if (id == null) return BadRequest();
+
+            bool isOwner = await _cloudManager.isOwnerAsync(id, model.Id, model.Type);
+            if (!isOwner) return Forbid();
 
             await _cloudManager.GrantAccessForAsync(User, toEmail, model);
 
