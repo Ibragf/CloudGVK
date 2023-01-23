@@ -92,19 +92,33 @@ namespace BackendGVK.Controllers
             if (id == null) return BadRequest();
 
             string destPath = await _cloudManager.GetPathAsync(id, destination, ElementTypes.Directory);
+            if (destPath == null)
+            {
+                ModelState.AddModelError("errors", "Destination path doesn't exists.");
+                return BadRequest(ModelState);
+            }
 
             DirectoryModel dir = new DirectoryModel
             {
                 Id = Guid.NewGuid().ToString(),
                 UntrustedName = dirName,
-                Path = Path.Combine(destPath, dirName),
-                Size = 0
+                CloudPath = Path.Combine(destPath, dirName),
+                Size = "0",
+                isAdded = true
             };
 
             bool result = await _cloudManager.AddDirectoryAsync(id, dir, destination);
             
-            if(result) return Ok(dir);
-            return BadRequest();
+            if(result)
+            {
+                dir.isAdded = true;
+                return Ok(dir);
+            }
+            else
+            {
+                ModelState.AddModelError("errors", "Directory already exists.");
+                return BadRequest(ModelState);
+            }
         }
 
         [HttpGet("change")]

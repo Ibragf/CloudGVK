@@ -1,11 +1,14 @@
 ﻿using BackendGVK.Controllers;
 using BackendGVK.Models;
+using Neo4jClient;
 using System.Security.Claims;
 
 namespace BackendGVK.Services.CloudService
 {
     public interface ICloud
     {
+        GraphSet<FileModel> Files { get; set; }
+        GraphSet<DirectoryModel> Directories { get; set; }
         Task<OutputElements> GetElementsAsync(string userId, string directory);
         Task<bool> ChangeNameAsync(string userId, string oldName, string currentName, ElementTypes type);
         Task RemoveAsync(string userId, string name, ElementTypes type);
@@ -26,5 +29,16 @@ namespace BackendGVK.Services.CloudService
         Task AcceptInvitationAsync(string userId, InvitationModel invitation);
         Task<string> DeleteInvitationAsync(InvitationModel invitation);
         Task SaveChangesAsync();
+    }
+
+    public class GraphSet<T>
+    {
+        private readonly ElementTypes _type;
+        private readonly IGraphClient _client; 
+        public GraphQuery<T> Query => new GraphQuery<T>(_type, _client);
+        public GraphSet(ElementTypes type, IGraphClient client) {
+            _type = type;
+            _client = client;
+        }   
     }
 }

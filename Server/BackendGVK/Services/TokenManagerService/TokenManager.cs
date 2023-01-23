@@ -125,7 +125,8 @@ namespace BackendGVK.Services.TokenManagerService
 
             DateTime datetime = UnixTimeStampToDateTime(utc);
             TimeSpan exp = datetime.Subtract(DateTime.UtcNow).Add(new TimeSpan(0, 3, 0));
-            await _cache.SetStringAsync($"tokens:{token}", "deactivated", new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp });
+
+            if(exp>TimeSpan.Zero) await _cache.SetStringAsync($"tokens:{token}", "deactivated", new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp });
 
             return true;
         }

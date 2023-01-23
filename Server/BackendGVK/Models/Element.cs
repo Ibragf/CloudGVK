@@ -6,8 +6,8 @@ namespace BackendGVK.Models
     {
         public string Id { get; set; } = null!;
         public virtual ElementTypes Type { get; }
-        public string Path { get; set; } = null!;
-        public ulong Size { get; set; }
+        public string CloudPath { get; set; } = null!;
+        public string Size { get; set; }
         public bool isAdded { get; set; }
         public string UntrustedName { get; set; } = null!;
         public bool isShared { get; set; }

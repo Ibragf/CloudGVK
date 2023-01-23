@@ -13,9 +13,14 @@ namespace BackendGVK.Services.CloudService
     {
         private readonly IGraphClient _clientGraph;
 
+        public GraphSet<FileModel> Files { get; set; }
+        public GraphSet<DirectoryModel> Directories { get; set; }
+
         public CloudManager(IGraphClient clientGraph)
         {
             _clientGraph = clientGraph;
+            Files = new GraphSet<FileModel>(ElementTypes.File, clientGraph);
+            Directories = new GraphSet<DirectoryModel>(ElementTypes.Directory, clientGraph);
         }
         public async Task<bool> AddFileAsync(string userId, FileModel file, string destination)
         {
@@ -34,7 +39,7 @@ namespace BackendGVK.Services.CloudService
                     dirname = destination,
                     fileInstance = file
                 })
-                .Return(e => e.As<FileModel>().isAdded)
+                .Return(f => f.As<FileModel>().isAdded)
                 .ResultsAsync;
 
             bool result = results.FirstOrDefault();
@@ -47,19 +52,20 @@ namespace BackendGVK.Services.CloudService
             if (dir == null || destination == null || userId == null) throw new ArgumentNullException();
 
             var results = await _clientGraph.Cypher
-                .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }}")
-                .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory} {{ $dirInstance }})")
-                .OnCreate()
-                .Set("nd.isAdded = true")
+                .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ UntrustedName : $dirname }})")
+                .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory}  {{UntrustedName:$dirInstance.UntrustedName}} )")
                 .OnMatch()
                 .Set("nd.isAdded = false")
+                .OnCreate()
+                .Set("nd = $dirInstance")
+                //.Set("nd.Type = $dirInstance.Type")
                 .WithParams(new
                 {
                     id = userId,
                     dirname = destination,
                     dirInstance = dir
                 })
-                .Return(e => e.As<DirectoryModel>().isAdded)
+                .Return(nd => nd.As<DirectoryModel>().isAdded)
                 .ResultsAsync;
 
             bool result = results.FirstOrDefault();
@@ -156,6 +162,10 @@ namespace BackendGVK.Services.CloudService
         public async Task<string> GetPathAsync(string userId, string name, ElementTypes type)
         {
             if (userId == null || name == null) throw new ArgumentNullException();
+            if(name == "home")
+            {
+                return "/home";
+            }
 
             var res = await _clientGraph.Cypher
                 .Match($"(u:User {{ Id : $id }})-[*]->(e:{type} {{ UntrustedName : $name }})")
@@ -165,7 +175,7 @@ namespace BackendGVK.Services.CloudService
                     type = type.ToString(),
                     name
                 })
-                .Return(e => e.As<Element>().Path)
+                .Return(e => e.As<Element>().CloudPath)
                 .ResultsAsync;
 
             return res.FirstOrDefault()!;
@@ -220,6 +230,7 @@ namespace BackendGVK.Services.CloudService
                 .OptionalMatch($"(u:User {{ Id : $id }})-[*]->(e:{type} {{ UntrustedName : $ename }})")
                 .OptionalMatch($"(u)-[*]->(d:{ElementTypes.Directory} {{ UntrustedName : $destination }})")
                 .Merge("(d)-[:HAS]->(e)")
+                .OnMatch("e.isAdded = false")
                 .WithParams(new
                 {
                     id = userId,
@@ -413,7 +424,7 @@ namespace BackendGVK.Services.CloudService
             if(email == null) throw new ArgumentNullException();
 
             var values = await _clientGraph.Cypher
-                .OptionalMatch("(u:User { Email : $email }")
+                .OptionalMatch("(u:User { Email : $email })")
                 .WithParam("email", email)
                 .Return(u => u.As<string>())
                 .ResultsAsync;
@@ -475,5 +486,7 @@ namespace BackendGVK.Services.CloudService
 
             return result.FirstOrDefault()!;
         }
+
+
     }
 }
