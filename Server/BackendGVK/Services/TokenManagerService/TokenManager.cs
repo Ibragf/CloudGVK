@@ -162,12 +162,13 @@ namespace BackendGVK.Services.TokenManagerService
         {
             var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             datetime = DateTime.UtcNow.AddMinutes(15);
+            var claimsWithoutAud = claims.Where(x => x.Type!="aud");
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 signingCredentials: new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256),
-                claims: claims,
+                claims: claimsWithoutAud,
                 notBefore: DateTime.UtcNow,
                 expires: datetime
             );

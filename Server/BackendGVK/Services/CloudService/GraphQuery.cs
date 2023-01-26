@@ -1,4 +1,5 @@
 ﻿using BackendGVK.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Neo4jClient;
 using Neo4jClient.Cypher;
 using System.Text;
@@ -37,43 +38,37 @@ namespace BackendGVK.Services.CloudService
             string updateString;
             if (WhereValues.Count > 0)
             {
+                ICypherFluentQuery cypher = _client.Cypher;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("{");
-                var keys = WhereValues.Keys;
-                int count = 0;
-                foreach (var key in keys)
+                foreach (var key in WhereValues.Keys)
                 {
                     sb.Append(key).Append(":").Append("$").Append(key);
-                    if (count < WhereValues.Count) sb.Append(",");
-                    count++;
+                    cypher = cypher.WithParam(key, WhereValues[key]);
+                    WhereValues.Remove(key);
+                    if (WhereValues.Count>0) sb.Append(",");
                 }
                 sb.Append("}");
                 whereString = sb.ToString();
 
-                string type = Type.ToString();
-                ICypherFluentQuery cypher = _client.Cypher.OptionalMatch($"(e:{type} {whereString})");
-                foreach (var key in WhereValues.Keys)
-                {
-                    cypher.WithParam(key, WhereValues[key]);
-                }
+                cypher = cypher.OptionalMatch($"(e:{Type} {whereString})");
 
                 if (UpdateValues.Count > 0)
                 {
                     sb.Clear();
                     foreach (var key in UpdateValues.Keys)
                     {
-                        sb.Append("e.").Append(key).Append("=").Append("$").Append(key);
-                        cypher.WithParam(key, UpdateValues[key]);
+                        sb.Append("e.").Append(key).Append("=").Append("$").Append(key).Append(UpdateValues[key]);
+                        cypher = cypher.WithParam(key + UpdateValues[key], UpdateValues[key]);
                         UpdateValues.Remove(key);
                         if (UpdateValues.Count > 0) sb.Append(",");
                     }
                     updateString = sb.ToString();
 
-                    cypher.Set($"{updateString}");
+                    cypher=cypher.Set($"{updateString}");
                 }
 
                 var result = await cypher.Return(e => e.As<T>()).ResultsAsync;
-
                 return result;
             }
 

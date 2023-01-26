@@ -23,10 +23,9 @@ namespace BackendGVK.Controllers
         [DisableFormValueModelBinding]
         [RequestFormLimits(MultipartBodyLengthLimit = 1024L*1024L*1024L*10L)]
         [RequestSizeLimit(1024L * 1024L * 1024L * 10L)]
-        public async Task<IActionResult> UploadLargeFiles([Required]string directory)
+        public async Task<IActionResult> UploadLargeFiles([Required]string directoryId)
         {
-            var files = await _spaceManager.UploadLargeFiles(HttpContext, directory);
-            if (files == null) return BadRequest();
+            var files = await _spaceManager.UploadLargeFiles(HttpContext, directoryId);
 
             return Ok(files);
         }

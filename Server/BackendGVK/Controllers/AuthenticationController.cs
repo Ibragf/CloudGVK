@@ -35,6 +35,7 @@ namespace BackendGVK.Controllers
         public async Task<IActionResult> Register(RegisterModel model)
         {
             ApplicationUser user = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+
             IdentityResult result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
@@ -46,11 +47,11 @@ namespace BackendGVK.Controllers
                 };
                 await _userManager.AddClaimsAsync(user, claims);
 
-                await _signInManager.SignInAsync(user, isPersistent: false);
-
                 string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 string html = _emailsender.GetHtmlForConfirmationToken(code);
                 await _emailsender.SendEmailAsync(model.Email, "Confirm Email", html);
+
+                await _signInManager.SignInAsync(user, isPersistent: false);
             }
             else
             {
@@ -64,7 +65,7 @@ namespace BackendGVK.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> SignIn(SignInModel model)
+        public async Task<IActionResult> SignIn(SignInModel model, [FromServices] ICloud cloud)
         {
             string token;
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -94,6 +95,7 @@ namespace BackendGVK.Controllers
                 }
                 if (isFailed) return BadRequest(ModelState);
             }
+
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, true);
 
             if (result.IsLockedOut)
@@ -104,7 +106,12 @@ namespace BackendGVK.Controllers
             if (result.Succeeded)
             {
                 var claims = await _userManager.GetClaimsAsync(user);
+                var homeDirId = await cloud.GetHomeDirId(user.Id);
+                if (homeDirId == null) return BadRequest();
+
                 claims.Add(new Claim("Id", user.Id));
+                claims.Add(new Claim("HomeDir", homeDirId));
+
                 token = await _tokenManager.GenerateTokenAsync(user.Id, claims, model.FingerPrint);
                 if (token == null) return BadRequest();
             }
