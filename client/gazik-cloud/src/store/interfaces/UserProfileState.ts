@@ -1,3 +1,8 @@
 export interface UserProfileState {
-    isLoggedIn: boolean
+    isLoggedIn: boolean,
+    userData: {
+        name: string, 
+        email: string, 
+        password: string,
+    },
 }

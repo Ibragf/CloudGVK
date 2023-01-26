@@ -1,0 +1,37 @@
+.auth-form {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+
+  padding: 30px 20px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+
+  text-align: center;
+  background-color: #2c2a3b;
+  border-radius: 5px;
+
+  font-size: 1.2rem;
+  backface-visibility: hidden;
+  transition: 0.5s linear;
+}
+
+.form-item {
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+
+    border-radius: 2px;
+    background-color: #1f1e28;
+    color: #ffe7ac;
+}
+
+.auth-link {
+    text-decoration: none;
+    color: #b7b5c1;
+    font-size: 1rem;
+}

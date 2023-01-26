@@ -5,7 +5,7 @@ InputHTMLAttributes<HTMLInputElement>,
 HTMLInputElement
 > {
     type: string,
-    id: string,
+    id?: string,
     width?: string,
     borderRadius?: string,
     value?: string,

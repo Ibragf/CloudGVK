@@ -5,12 +5,12 @@ import { CheckAuthProps } from "../interfaces/CheckAuthProps";
 
 const CheckAuth = ({ children }: CheckAuthProps): JSX.Element => {
   let { pathname } = useLocation();
-  if (pathname === "/" || pathname === "/login") pathname = "/files";
+  if (pathname === "/" || pathname === "/auth") pathname = "/files";
 
   const isLoggedIn = useAppSelector((state) => state.authReducer.isLoggedIn);
   const navigate = useNavigate();
   useEffect(() => {
-    isLoggedIn ? navigate(pathname) : navigate("/login");
+    isLoggedIn ? navigate(pathname) : navigate("/auth");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 

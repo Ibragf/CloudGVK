@@ -1,0 +1,38 @@
+.starting-page {
+    height: 100vh;
+
+    color: #b7b5c1;
+    background-color: #1f1e28;
+}
+
+.form-container {
+    min-height: 150px;
+    width: 400px;
+    transition: .5s linear;
+}
+
+.form__inner {
+    position: relative;
+    min-height: 300px;
+    perspective: 1500rem;
+}
+
+.sign-variant {
+    display: flex;
+    gap: 4rem;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.starting-page__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+}
