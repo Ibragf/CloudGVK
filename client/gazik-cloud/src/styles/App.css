@@ -76,7 +76,6 @@ body {
 }
 
 .name-page-svg {
-  position: absolute;
-  top: 4px;
-  right: -21px;
+  fill: rgb(186, 186, 186);
+  margin-top: 4px;
 }

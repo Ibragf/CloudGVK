@@ -1,9 +1,9 @@
-import HeaderShowContent from "./HeaderShowContent";
+// import HeaderShowContent from "./HeaderShowContent";
 
 const ShowTrash = (): JSX.Element => {
   return (
     <>
-      <HeaderShowContent page="Trash" />
+      {/* <HeaderShowContent page="Trash" /> */}
       <div>Trash</div>
     </>
   );

@@ -17,14 +17,26 @@
   font-weight: 600;
 }
 
-.name-page-link {
-  position: relative;
-  color: var(--grey);
-  cursor: pointer;
-  transition: .2s;
+.folder-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.name-page-link:hover {
+.container-folder-link {
+  display: flex;
+  gap: 10px;
+}
+
+.name-folder-link {
+  position: relative;
+  /* color: var(--grey); */
+  color: rgb(186, 186, 186);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.name-folder-link:hover {
   color: #000;
 }
 
@@ -40,6 +52,8 @@
 
   width: 100%;
   padding: 10px 0;
+
+  background: var(--white);
   border-radius: 7px;
   list-style-type: none;
 }
@@ -47,7 +61,7 @@
 .drop-down-list-item {
   font-weight: 400;
   padding: 5px 10px;
-  transition: 0.2s;
+  transition: .2s;
   cursor: pointer;
 }
 
@@ -95,7 +109,13 @@
 /* Main Show Content */
 /* ===================== */
 
-.show-content-list {
+.current-folder {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.storage-list {
   margin-top: 10px;
   display: flex;
   gap: 10px;

@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { PopUpCreateProps } from "../../interfaces/PopUpCreateProps";
+import { UserStorageItem } from "../../store/interfaces/IUserStorage";
+import { useCreateFolderMutation } from "../../store/userStorageApi";
 import Blur from "../effects/Blur";
 import Button from "../UI/button/Button";
 import TextInput from "../UI/input/TextInput";
@@ -7,18 +10,29 @@ import PopUp from "./PopUp";
 
 const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
   const [nameFolder, setNameFolder] = useState<string>("New folder");
+  const [createFolder] = useCreateFolderMutation();
+  const { pathname } = useLocation();
 
-  
   const writeNameFolder = (e: any): void => {
     setNameFolder(e.target.value);
   };
 
-	const createFolder = (): void => {
-		if (!nameFolder) console.log('New Folder');
-		else {
-    };
-		setDisplay(false);
-	}
+  const handleCreateFolder = async () => {
+    if (!nameFolder)
+      await createFolder({
+        path: pathname,
+        type: "folder",
+        name: "New folder",
+      } as UserStorageItem);
+    else {
+      await createFolder({
+        path: pathname,
+        type: "folder",
+        name: nameFolder,
+      } as UserStorageItem);
+    }
+    setDisplay(false);
+  };
 
   return (
     <>
@@ -33,7 +47,7 @@ const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
             value={nameFolder}
           />
           <div className="btn-create-folder-container">
-            <Button onClick={createFolder} color="yellow">
+            <Button onClick={handleCreateFolder} color="yellow">
               Save
             </Button>
           </div>
