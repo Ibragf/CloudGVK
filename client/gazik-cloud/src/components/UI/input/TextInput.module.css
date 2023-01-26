@@ -1,9 +1,11 @@
 .textInput {
-    padding: 10px;
+    padding: 10px 10px 10px 5px;
     width: 100%;
 
+    font-size: 1.1rem;
     border-radius: 2px;
     background-color: #1f1e28;
     color: #b7b5c1;
+    outline: none;
     border: none;
 }

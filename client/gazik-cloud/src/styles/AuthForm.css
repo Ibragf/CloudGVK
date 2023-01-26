@@ -1,4 +1,4 @@
-.signUp-form {
+.auth-form {
   position: absolute;
   top: 0;
   left: 0;
@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
+  gap: 20px;
 
   text-align: center;
   background-color: #2c2a3b;
@@ -20,6 +20,18 @@
   transition: 0.5s linear;
 }
 
-.signUp-form_rotated {
-  transform: rotateY(180deg);
+.form-item {
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+
+    border-radius: 2px;
+    background-color: #1f1e28;
+    color: #ffe7ac;
+}
+
+.auth-link {
+    text-decoration: none;
+    color: #b7b5c1;
+    font-size: 1rem;
 }

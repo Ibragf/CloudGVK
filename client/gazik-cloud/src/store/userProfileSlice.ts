@@ -3,9 +3,11 @@ import { UserProfileState } from './interfaces/UserProfileState';
 
 const initialState: UserProfileState = {
     isLoggedIn: false,
-    name: '', 
-    email: '',
-    password: '',
+    userData: {
+        name: '', 
+        email: '',
+        password: '',
+    }
 };
 
 const userProfileSlice = createSlice({
@@ -16,13 +18,13 @@ const userProfileSlice = createSlice({
             state.isLoggedIn = !state.isLoggedIn;
         },
         setName(state, action) {
-            state.name = action.payload;
+            state.userData.name = action.payload;
         },
         setEmail(state, action) {
-            state.email = action.payload;
+            state.userData.email = action.payload;
         },
         setPassword(state, action) {
-            state.password = action.payload;
+            state.userData.password = action.payload;
         }
     },
 });
