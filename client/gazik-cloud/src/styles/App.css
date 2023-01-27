@@ -78,3 +78,14 @@ body {
   fill: rgb(186, 186, 186);
   margin-top: 4px;
 }
+
+.current-folder-svg {
+  cursor: pointer;
+  margin: 4px 0 0 -4px;
+  fill: var(--grey);
+  transition: 0.2s;
+}
+
+.current-folder-svg:hover {
+  fill: #000;
+}

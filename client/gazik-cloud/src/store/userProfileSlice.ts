@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { UserProfileState } from './interfaces/UserProfileState';
 
 const initialState: UserProfileState = {
-    isLoggedIn: true,
+    isLoggedIn: false,
     userData: {
         name: '', 
         email: '',

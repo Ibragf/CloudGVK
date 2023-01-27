@@ -1,19 +1,27 @@
 import HeaderShowStorage from "./HeaderShowStorage";
 import StorageItem from "./StorageItem";
 import { useFetchStorageQuery } from "../../store/userStorageApi";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { IoMdArrowBack } from "react-icons/io";
 
 const ShowStorage = (): JSX.Element => {
   const { pathname } = useLocation();
   const { data: storage, isLoading, error } = useFetchStorageQuery(pathname);
+  console.log(storage);
+  const navigate = useNavigate();
 
   return (
     <>
       <HeaderShowStorage />
 
-      {/* Добавить возврат на пред ссылку если locaton !== /files*/}
       {pathname !== "/files" ? (
-        <div className="current-folder">{pathname.split("/")[pathname.split("/").length - 1]}</div>
+        <div className="current-folder">
+          <IoMdArrowBack
+            className="current-folder-svg"
+            onClick={() => navigate(-1)}
+          />
+          {pathname.split("/")[pathname.split("/").length - 1]}
+        </div>
       ) : null}
 
       {isLoading ? (

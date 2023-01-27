@@ -20,16 +20,14 @@ const PopUpCreate: React.FC<PopUpCreateProps> = ({ display, setDisplay }) => {
   const handleCreateFolder = async () => {
     if (!nameFolder)
       await createFolder({
-        path: pathname,
-        type: "folder",
-        name: "New folder",
-      } as UserStorageItem);
+        dirName: "new folder",
+        destinationId: "0001418c-29b0-4c4d-9a9c-3fe6b2d475dc",
+      });
     else {
       await createFolder({
-        path: pathname,
-        type: "folder",
-        name: nameFolder,
-      } as UserStorageItem);
+        dirName: nameFolder,
+        destinationId: "0001418c-29b0-4c4d-9a9c-3fe6b2d475dc",
+      });
     }
     setDisplay(false);
   };

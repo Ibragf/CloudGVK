@@ -110,6 +110,9 @@
 /* ===================== */
 
 .current-folder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 20px;
   font-size: 1.5rem;
   font-weight: 600;

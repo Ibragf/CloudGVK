@@ -24,7 +24,8 @@ export const signInPost = async (email: string, password: string) => {
   const fp = await fpPromise;
   const result = await fp.get();
   const response = await baseAxios.post("/api/login", {
-    fingerPrint: result.visitorId,
+    fingerPrint: 'fdsa',
+    // fingerPrint: result.visitorId,
     email: email,
     password: password,
   });
