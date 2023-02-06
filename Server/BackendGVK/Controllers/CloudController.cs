@@ -22,7 +22,44 @@ namespace BackendGVK.Controllers
             _cloudManager = cloud;
         }
 
-        [HttpPost("accept")]
+        [HttpGet("elements")]
+        public async Task<IActionResult> GetElements(string directoryId)
+        {
+            string id = GetUserId();
+            string homeDirId = User.Claims.FirstOrDefault(x => x.Type == "HomeDir")?.Value!;
+            if (id == null || homeDirId == null) return BadRequest();
+
+            InternalElements elements;
+            if (directoryId == null)
+                elements = await _cloudManager.GetElementsAsync(id, homeDirId);
+            else
+                elements = await _cloudManager.GetElementsAsync(id, directoryId);
+
+            return Ok(elements);
+        }
+        [HttpGet("dirs/size")]
+        public async Task<IActionResult> GetSize(string dirId)
+        {
+            string id = GetUserId();
+            if (id == null) return BadRequest();
+
+            string dirSize = await _cloudManager.GetDirSizeAsync(id, dirId);
+
+            return Ok(dirSize);
+        }
+
+        [HttpGet("invitations")]
+        public async Task<IActionResult> GetInvitations()
+        {
+            string id = GetUserId();
+            if (id == null) return BadRequest();
+
+            var invitations = await _cloudManager.GetInvitationsAsync(id);
+
+            return Ok(invitations);
+        }
+
+        [HttpPost("invintations/accept")]
         public async Task<IActionResult> AcceptInvitation(InvitationModel invitation)
         {
             string id = GetUserId();
@@ -33,7 +70,7 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPost("grant")]
+        [HttpPost("invintations/send")]
         public async Task<IActionResult> GrantAccess(DirectoryModel model,[Required] string toEmail)
         {
             string id = GetUserId();
@@ -47,7 +84,7 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPost("copyto")]
+        [HttpPost("elements/copyto")]
         public async Task<IActionResult> CopyElement(CloudInputModel model)
         {
             string id = GetUserId();
@@ -63,7 +100,7 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPost("moveto")]
+        [HttpPut("elements/moveto")]
         public async Task<IActionResult> MoveElement(CloudInputModel model)
         {
             string id = GetUserId();
@@ -88,43 +125,7 @@ namespace BackendGVK.Controllers
             return Forbid();
         }
 
-        [HttpGet("add/dir")]
-        public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName,[Required] string destinationId)
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            string destPath = await _cloudManager.GetPathAsync(id, destinationId, ElementTypes.Directory);
-            if (destPath == null)
-            {
-                ModelState.AddModelError("errors", "Destination path doesn't exists.");
-                return BadRequest(ModelState);
-            }
-
-            DirectoryModel dir = new DirectoryModel
-            {
-                Id = Guid.NewGuid().ToString(),
-                UntrustedName = dirName,
-                CloudPath = Path.Combine(destPath, dirName),
-                Size = "0",
-                isAdded = true
-            };
-
-            bool result = await _cloudManager.AddDirectoryAsync(id, dir, destinationId);
-            
-            if(result)
-            {
-                dir.isAdded = true;
-                return Ok(dir);
-            }
-            else
-            {
-                ModelState.AddModelError("errors", "Directory already exists.");
-                return BadRequest(ModelState);
-            }
-        }
-
-        [HttpPost("change")]
+        [HttpPut("elements/changename")]
         public async Task<IActionResult> UpdateName(CloudInputModel model, [Required][StringLength(50, MinimumLength = 1)] string currentName)
         {
             string id = GetUserId();
@@ -147,26 +148,54 @@ namespace BackendGVK.Controllers
 
                 return Ok();
             }
-
-            return BadRequest();
+            else 
+                return Forbid();
         }
 
-        [HttpGet("elements")]
-        public async Task<IActionResult> GetElements(string directoryId)
+        [HttpPost("dirs/add")]
+        public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName, [Required] string destinationId)
         {
             string id = GetUserId();
-            string homeDirId = User.Claims.FirstOrDefault(x => x.Type == "HomeDir")?.Value!;
-            if(id == null || homeDirId==null) return BadRequest();
+            if (id == null) return BadRequest();
 
-            InternalElements elements;
-            if (directoryId == null)
-                elements = await _cloudManager.GetElementsAsync(id, homeDirId);
-            else if (directoryId != null)
-                elements = await _cloudManager.GetElementsAsync(id, directoryId);
+            string destPath = await _cloudManager.GetPathAsync(id, destinationId, ElementTypes.Directory);
+            if (destPath == null)
+            {
+                ModelState.AddModelError("errors", "Destination path doesn't exists.");
+                return BadRequest(ModelState);
+            }
+
+            DirectoryModel dir = new DirectoryModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                UntrustedName = dirName,
+                CloudPath = Path.Combine(destPath, dirName),
+                isAdded = true
+            };
+
+            bool result = await _cloudManager.AddDirectoryAsync(id, dir, destinationId);
+
+            if (result)
+            {
+                dir.isAdded = true;
+                return Ok(dir);
+            }
             else
-                return BadRequest();
+            {
+                ModelState.AddModelError("errors", "Directory already exists.");
+                return BadRequest(ModelState);
+            }
+        }
 
-            return Ok(elements);
+        [HttpPost("trash/add")]
+        public async Task<IActionResult> RemoveElement(CloudInputModel model)
+        {
+            string id = GetUserId();
+            if (id == null) return BadRequest();
+
+            await _cloudManager.RemoveAsync(id, model.ElementId, model.Type);
+
+            return Ok();
         }
 
         private string GetUserId()

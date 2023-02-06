@@ -54,7 +54,7 @@ namespace BackendGVK.Services.CloudService
         public async Task<bool> AddDirectoryAsync(string userId, DirectoryModel dir, string destinationId)
         {
             if (dir == null || destinationId == null || userId == null) throw new ArgumentNullException();
-
+            
             var results = await _clientGraph.Cypher
                 .OptionalMatch($"(:User {{ Id: $id }})-[r*]->(d:{ElementTypes.Directory} {{ Id : $dirId }})")
                 .Merge($"(d)-[:HAS]->(nd:{ElementTypes.Directory}  {{UntrustedName:$dirInstance.UntrustedName}} )")
@@ -116,24 +116,31 @@ namespace BackendGVK.Services.CloudService
             bool isHomeDir = res.FirstOrDefault()==null ? false : true;
             if (isHomeDir)
             {
-                var dirsResult = await _clientGraph.Cypher
+                var dirsTask = _clientGraph.Cypher
                     .OptionalMatch($"(u:User {{ Id : $id }})-[:HAS]->()-[:HAS]->(dirs:{ElementTypes.Directory})")
+                    .Where("dirs.DeleteDate is NULL")
                     .WithParam("id", userId)
                     .Return(dirs => dirs.CollectAs<DirectoryModel>())
                     .ResultsAsync;
 
-                var filesResult = await _clientGraph.Cypher
+                var filesTask = _clientGraph.Cypher
                     .OptionalMatch($"(u:User {{ Id : $id }})-[:HAS]->()-[:HAS]->(files:{ElementTypes.File})")
+                    .Where("files.DeleteDate is NULL")
                     .WithParam("id", userId)
                     .Return(files => files.CollectAs<Element>())
                     .ResultsAsync;
 
-                var sharedResult = await _clientGraph.Cypher
+                var sharedTask = _clientGraph.Cypher
                     .OptionalMatch($"(u:User {{ Id : $id }})-[:ACCESS]->(shared:{ElementTypes.Directory})")
                     .Set("shared.isShared = true")
                     .WithParam("id", userId)
                     .Return(shared => shared.CollectAs<DirectoryModel>())
                     .ResultsAsync;
+
+                var dirsResult = await dirsTask;
+                var filesResult = await filesTask;
+                var sharedResult = await sharedTask;
+
 
                 var dirs = dirsResult.FirstOrDefault()!;
                 var files = filesResult.FirstOrDefault()!;
@@ -154,6 +161,8 @@ namespace BackendGVK.Services.CloudService
                     .Match($"(u:User {{ Id: $id }})-[*]->(d:{ElementTypes.Directory} {{ Id : $dirId }})")
                     .OptionalMatch($"(d)-[:HAS]->(files:{ElementTypes.File})")
                     .OptionalMatch($"(d)-[:HAS]->(dirs:{ElementTypes.Directory})")
+                    .Where("dirs.DeleteDate is NULL")
+                    .AndWhere("files.DeleteDate is NULL")
                     .WithParams(new
                     {
                         id = userId,
@@ -178,7 +187,6 @@ namespace BackendGVK.Services.CloudService
                 return output;
             }
         }
-
         public async Task<string> GetPathAsync(string userId, string elementId, ElementTypes type)
         {
             if (userId == null || elementId == null) throw new ArgumentNullException();
@@ -195,7 +203,6 @@ namespace BackendGVK.Services.CloudService
 
             return res.FirstOrDefault()!;
         }
-
         public async Task MoveToAsync(string userId, string elementId, string destinationId, ElementTypes type)
         {
             if (userId == null || elementId == null || destinationId == null) throw new ArgumentNullException();
@@ -220,12 +227,68 @@ namespace BackendGVK.Services.CloudService
                 await tx.CommitAsync();
             }
         }
-
         public async Task RemoveAsync(string userId, string elementId, ElementTypes type)
         {
-            if (userId == null || elementId==null) throw new ArgumentNullException();
+            if (userId == null || elementId == null) throw new ArgumentNullException();
+
+            var homeDirId = await GetHomeDirId(userId);
+            if (homeDirId == elementId) return;
+
+            var deleteTime = DateTime.Now.AddDays(30);
+
+            await RemoveAccessAsync(elementId);
 
             await _clientGraph.Cypher
+                .Match($"(:User {{Id:$id}})-[:HAS*]->(e:{type} {{Id:$elementId}})")
+                .Set("e.DeleteDate=$date, e.isShared=false")
+                .WithParams(new
+                {
+                    id = userId,
+                    elementId,
+                    date = deleteTime
+                })
+                .ExecuteWithoutResultsAsync();
+        }
+        public async Task<List<string>> DeleteAsync(string userId, string elementId, ElementTypes type)
+        {
+            if (userId == null || elementId==null) throw new ArgumentNullException();
+            List<string> deleted = null!;
+
+            if(type == ElementTypes.File)
+            {
+                var files = await Files.Query.Where(nameof(FileModel.Id), elementId).ExecuteAsync();
+                var file = files.FirstOrDefault();
+                if (file == null) return;
+
+                //удаление сущности файла и связей из бд
+                await _clientGraph.Cypher
+                    .Match($"(:User {{ Id : $id }})-[*]->(e:{type} {{ Id : $elementId }})")
+                    .OptionalMatch("(e)-[*]->(x)")
+                    .Where("e.DeleteDate is not NULL")
+                    .WithParams(new
+                    {
+                        id = userId,
+                        elementId
+                    })
+                    .DetachDelete("x,e")
+                    .ExecuteWithoutResultsAsync();
+
+                //существует ли файл у др пользователей после удаления
+                var res = await _clientGraph.Cypher
+                    .OptionalMatch($"(f:{ElementTypes.File} {{ MD5Hash : $hash }})")
+                    .WithParam("hash", file.MD5Hash)
+                    .Return(f => f.As<FileModel>().UntrustedName)
+                    .ResultsAsync;
+
+                if(res == null)
+                {
+                    deleted = new();
+                    deleted.Add(res.FirstOrDefault());
+                }
+
+                return deleted;
+            }
+            /*await _clientGraph.Cypher
                 .Match($"(:User {{ Id : $id }})-[*]->(e:{type} {{ Id : $elementId }})")
                 .OptionalMatch("(e)-[*]->(x)")
                 .WithParams(new
@@ -234,7 +297,7 @@ namespace BackendGVK.Services.CloudService
                     elementId
                 })
                 .DetachDelete("x,e")
-                .ExecuteWithoutResultsAsync();
+                .ExecuteWithoutResultsAsync();*/
         }
 
         public async Task CopyToAsync(string userId, string elementId, string destinationId, ElementTypes type)
@@ -258,8 +321,9 @@ namespace BackendGVK.Services.CloudService
                 dir4Copy.Id = Guid.NewGuid().ToString();
                 dir4Copy.isShared = false;
                 dir4Copy.CloudPath = Path.Combine(destination.CloudPath, dir4Copy.UntrustedName);
-                destination.Size = (ulong.Parse(destination.Size) + ulong.Parse(dir4Copy.Size)).ToString();
-                await AddDirectoryAsync(userId, dir4Copy, destination.Id);
+
+                bool isAdded=await AddDirectoryAsync(userId, dir4Copy, destination.Id);
+                if (!isAdded) return;
 
                 Stack<DirectoryModel> stack = new Stack<DirectoryModel>();
                 stack.Push(dir4Copy);
@@ -296,10 +360,6 @@ namespace BackendGVK.Services.CloudService
                         await CopyFileAsync(userId, file.Id, dir4Copy);
                     }
                 }
-                await Directories.Query
-                            .Where(nameof(DirectoryModel.Id), destination.Id)
-                            .Update(nameof(DirectoryModel.Size), destination.Size)
-                            .ExecuteAsync();
             }
         }
 
@@ -315,10 +375,8 @@ namespace BackendGVK.Services.CloudService
                     file.Id = Guid.NewGuid().ToString();
                     file.isShared = false;
                     file.CloudPath = Path.Combine(destination.CloudPath, file.UntrustedName);
-                    destination.Size = (ulong.Parse(destination.Size)+ulong.Parse(file.Size)).ToString();
 
                     await AddFileAsync(userId, file, destination.Id);
-                    destination.Size = (ulong.Parse(destination.Size) + ulong.Parse(file.Size)).ToString();
                 }
             }
         }
@@ -382,17 +440,33 @@ namespace BackendGVK.Services.CloudService
         {
 
         }
-        public async Task RemoveAccessAsync(string elementId, string userId)
+        public async Task RemoveAccessAsync(string elementId, string forUserId = null!)
         {
-            if (elementId == null || userId == null) throw new ArgumentNullException();
+            if (elementId == null) throw new ArgumentNullException();
+
+            if(forUserId == null)
+            {
+                await _clientGraph.Cypher
+                    .Match($"(e:Directory {{ Id : $elementId }})")
+                    .OptionalMatch("()-[r:ACCESS]->(e)")
+                    .WithParams(new
+                    {
+                        id = forUserId,
+                        elementId,
+                    })
+                    .Delete("r")
+                    .ExecuteWithoutResultsAsync();
+
+                return;
+            }
 
             await _clientGraph.Cypher
                 .Match($"(e:Directory {{ Id : $elementId }})")
-                .Match("(u:User { Id : $id }")
+                .Match("(u:User { Id : $id })")
                 .OptionalMatch("(u)-[r:ACCESS]->(e)")
                 .WithParams(new
                 {
-                    id = userId,
+                    id = forUserId,
                     elementId,
                 })
                 .Delete("r")
@@ -486,7 +560,6 @@ namespace BackendGVK.Services.CloudService
                 DirectoryId = directory.Id,
                 Directory = directory.UntrustedName,
                 From = fromName,
-                Size = directory.Size
             };
 
             await _clientGraph.Cypher
@@ -575,6 +648,28 @@ namespace BackendGVK.Services.CloudService
                 .ResultsAsync;
 
             return result.FirstOrDefault()!;
+        }
+
+        public async Task<string> GetDirSizeAsync(string userId, string dirId)
+        {
+            var res = await _clientGraph.Cypher
+                .OptionalMatch($"(:User {{ Id : $id }}-[*]->(d:{ElementTypes.Directory} {{Id :$dirId}})")
+                .OptionalMatch($"(d)-[:HAS*]->(f:{ElementTypes.File})")
+                .WithParams(new
+                {
+                    id = userId,
+                    dirId = dirId
+                })
+                .Return(f => f.As<FileModel>().Size)
+                .ResultsAsync;
+
+            ulong result = 0;
+            foreach (var fileSize in res)
+            {
+                result += ulong.Parse(fileSize);
+            }
+
+            return result.ToString();
         }
     }
 }
