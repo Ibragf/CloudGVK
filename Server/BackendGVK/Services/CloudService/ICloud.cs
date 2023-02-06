@@ -25,6 +25,7 @@ namespace BackendGVK.Services.CloudService
         Task<bool> ExistsUserAsync(string email);
         Task AcceptInvitationAsync(string userId, InvitationModel invitation);
         Task<string> DeleteInvitationAsync(InvitationModel invitation);
+        Task<FileModel> GetFileByHashSumAsync(string hashSum);
         Task SaveChangesAsync();
     }
 }

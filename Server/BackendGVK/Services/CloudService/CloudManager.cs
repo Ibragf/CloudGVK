@@ -165,7 +165,7 @@ namespace BackendGVK.Services.CloudService
                     type = type.ToString(),
                     name
                 })
-                .Return(e => e.As<Element>().Path)
+                .Return(e => e.As<Element>().CloudPath)
                 .ResultsAsync;
 
             return res.FirstOrDefault()!;
@@ -471,6 +471,17 @@ namespace BackendGVK.Services.CloudService
                 })
                 .Delete("r")
                 .Return(r => r.As<InvitationModel>().Id)
+                .ResultsAsync;
+
+            return result.FirstOrDefault()!;
+        }
+
+        public async Task<FileModel> GetFileByHashSumAsync(string hashSum)
+        {
+            var result = await _clientGraph.Cypher
+                .OptionalMatch($"(f:{ElementTypes.File} {{ MD5Hash : $hash }})")
+                .WithParam("hash", hashSum)
+                .Return(f => f.As<FileModel>())
                 .ResultsAsync;
 
             return result.FirstOrDefault()!;

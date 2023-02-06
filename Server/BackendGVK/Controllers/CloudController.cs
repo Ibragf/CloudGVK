@@ -97,7 +97,7 @@ namespace BackendGVK.Controllers
             {
                 Id = Guid.NewGuid().ToString(),
                 UntrustedName = dirName,
-                Path = Path.Combine(destPath, dirName),
+                CloudPath = Path.Combine(destPath, dirName),
                 Size = 0
             };
 
