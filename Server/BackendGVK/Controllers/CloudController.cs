@@ -4,11 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Security.Claims;
 
 namespace BackendGVK.Controllers
 {
@@ -19,12 +15,14 @@ namespace BackendGVK.Controllers
     public class CloudController : ControllerBase
     {
         private readonly ICloud _cloudManager;
-        public CloudController(ICloud cloud) 
+        private readonly IAuthorizationService _authService;
+        public CloudController(ICloud cloud, IAuthorizationService authorizationService) 
         {
+            _authService = authorizationService;
             _cloudManager = cloud;
         }
-        [HttpGet("accept")]
-        
+
+        [HttpPost("accept")]
         public async Task<IActionResult> AcceptInvitation(InvitationModel invitation)
         {
             string id = GetUserId();
@@ -35,7 +33,7 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpGet("grant")]
+        [HttpPost("grant")]
         public async Task<IActionResult> GrantAccess(DirectoryModel model,[Required] string toEmail)
         {
             string id = GetUserId();
@@ -49,36 +47,41 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpGet("copyto/{destination}")]
-        public async Task<IActionResult> CopyElement(Element element,[Required] string destination)
+        [HttpPost("copyto")]
+        public async Task<IActionResult> CopyElement(CloudInputModel model)
         {
             string id = GetUserId();
-            if (id == null) return BadRequest();
+            if (id == null || model.DestinationId==null) return BadRequest();
 
-            await _cloudManager.CopyToAsync(id, element.UntrustedName, destination, element.Type);
+            var authResult = await _authService.AuthorizeAsync(User, model, "isAllowed");
+            if (authResult.Succeeded)
+            {
+                await _cloudManager.CopyToAsync(id, model.ElementId, model.DestinationId, model.Type);
+            }
+            else return Forbid();
 
             return Ok();
         }
 
-        [HttpGet("moveto/{destination}")]
-        public async Task<IActionResult> MoveElement(Element element,[Required] string destination)
+        [HttpPost("moveto")]
+        public async Task<IActionResult> MoveElement(CloudInputModel model)
         {
             string id = GetUserId();
-            if (id == null) return BadRequest();
+            if (id == null || model.DestinationId == null) return BadRequest();
 
-            bool isOwner = await _cloudManager.isOwnerAsync(id, element.Id, element.Type);
+            bool isOwner = await _cloudManager.isOwnerAsync(id, model.ElementId, model.Type);
 
             if (isOwner)
             {
-                await _cloudManager.MoveToAsync(id, element.UntrustedName, destination, element.Type);
+                await _cloudManager.MoveToAsync(id, model.ElementId, model.DestinationId, model.Type);
                 return Ok();
             }
 
-            bool hasAccess = await _cloudManager.HasAccessAsync(id, element.Id, element.Type);
+            bool hasAccess = await _cloudManager.HasAccessAsync(id, model.ElementId, model.Type);
 
             if(hasAccess)
             {
-                await _cloudManager.MoveToAccessModeAsync(id, element.UntrustedName, destination, element.Type);
+                await _cloudManager.MoveToAccessModeAsync(id, model.ElementId, model.DestinationId, model.Type);
                 return Ok();
             }
 
@@ -86,46 +89,82 @@ namespace BackendGVK.Controllers
         }
 
         [HttpGet("add/dir")]
-        public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName,[Required] string destination)
+        public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName,[Required] string destinationId)
         {
             string id = GetUserId();
             if (id == null) return BadRequest();
 
-            string destPath = await _cloudManager.GetPathAsync(id, destination, ElementTypes.Directory);
+            string destPath = await _cloudManager.GetPathAsync(id, destinationId, ElementTypes.Directory);
+            if (destPath == null)
+            {
+                ModelState.AddModelError("errors", "Destination path doesn't exists.");
+                return BadRequest(ModelState);
+            }
 
             DirectoryModel dir = new DirectoryModel
             {
                 Id = Guid.NewGuid().ToString(),
                 UntrustedName = dirName,
                 CloudPath = Path.Combine(destPath, dirName),
-                Size = 0
+                Size = "0",
+                isAdded = true
             };
 
-            bool result = await _cloudManager.AddDirectoryAsync(id, dir, destination);
+            bool result = await _cloudManager.AddDirectoryAsync(id, dir, destinationId);
             
-            if(result) return Ok(dir);
-            return BadRequest();
+            if(result)
+            {
+                dir.isAdded = true;
+                return Ok(dir);
+            }
+            else
+            {
+                ModelState.AddModelError("errors", "Directory already exists.");
+                return BadRequest(ModelState);
+            }
         }
 
-        [HttpGet("change")]
-        public async Task<IActionResult> UpdateName([Required][StringLength(50, MinimumLength = 1)] string currentName, Element element)
+        [HttpPost("change")]
+        public async Task<IActionResult> UpdateName(CloudInputModel model, [Required][StringLength(50, MinimumLength = 1)] string currentName)
         {
             string id = GetUserId();
             if (id == null) return BadRequest();
+            bool hasAccess = await _cloudManager.HasAccessAsync(id, model.ElementId, model.Type);
+            bool isOwner = await _cloudManager.isOwnerAsync(id, model.ElementId, model.Type);
+            
+            if(hasAccess || isOwner )
+            {
+                if (model.Type == ElementTypes.File)
+                    await _cloudManager.Files.Query
+                        .Where(nameof(FileModel.Id), model.ElementId)
+                        .Update(nameof(FileModel.UntrustedName), currentName)
+                        .ExecuteAsync();
+                if (model.Type == ElementTypes.Directory)
+                    await _cloudManager.Directories.Query
+                        .Where(nameof(DirectoryModel.Id), model.ElementId)
+                        .Update(nameof(DirectoryModel.UntrustedName), currentName)
+                        .ExecuteAsync();
 
-            bool result = await _cloudManager.ChangeNameAsync(id, element.UntrustedName, currentName, element.Type);
+                return Ok();
+            }
 
-            if(result) return Ok();
             return BadRequest();
         }
 
-        [HttpGet("{directory}")]
-        public async Task<IActionResult> GetElements([FromRoute] string directory)
+        [HttpGet("elements")]
+        public async Task<IActionResult> GetElements(string directoryId)
         {
             string id = GetUserId();
-            if(id == null) return BadRequest();
+            string homeDirId = User.Claims.FirstOrDefault(x => x.Type == "HomeDir")?.Value!;
+            if(id == null || homeDirId==null) return BadRequest();
 
-            var elements = await _cloudManager.GetElementsAsync(id, directory);
+            InternalElements elements;
+            if (directoryId == null)
+                elements = await _cloudManager.GetElementsAsync(id, homeDirId);
+            else if (directoryId != null)
+                elements = await _cloudManager.GetElementsAsync(id, directoryId);
+            else
+                return BadRequest();
 
             return Ok(elements);
         }
@@ -134,15 +173,23 @@ namespace BackendGVK.Controllers
         {
             var claim = User.Claims.FirstOrDefault(x => x.Type == "Id");
             if (claim == null) return null!;
-
             return claim.Value;
         }
     }
 
-    public class OutputElements
+    public class InternalElements
     {
-        public IEnumerable<FileModel> Files { get; set; }
+        public IEnumerable<Element> Files { get; set; }
         public IEnumerable<DirectoryModel> Directories { get; set; }
         public IEnumerable<DirectoryModel> Shared { get; set; }
+    }
+
+    public class CloudInputModel
+    {
+        [Required]
+        public string ElementId { get; set; } = null!;
+        public string DestinationId { get; set; } = null!;
+        [Required]
+        public ElementTypes Type { get; set; }
     }
 }

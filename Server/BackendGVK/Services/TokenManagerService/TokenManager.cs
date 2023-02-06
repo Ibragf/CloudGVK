@@ -125,7 +125,8 @@ namespace BackendGVK.Services.TokenManagerService
 
             DateTime datetime = UnixTimeStampToDateTime(utc);
             TimeSpan exp = datetime.Subtract(DateTime.UtcNow).Add(new TimeSpan(0, 3, 0));
-            await _cache.SetStringAsync($"tokens:{token}", "deactivated", new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp });
+
+            if(exp>TimeSpan.Zero) await _cache.SetStringAsync($"tokens:{token}", "deactivated", new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = exp });
 
             return true;
         }
@@ -161,12 +162,13 @@ namespace BackendGVK.Services.TokenManagerService
         {
             var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             datetime = DateTime.UtcNow.AddMinutes(15);
+            var claimsWithoutAud = claims.Where(x => x.Type!="aud");
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 signingCredentials: new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256),
-                claims: claims,
+                claims: claimsWithoutAud,
                 notBefore: DateTime.UtcNow,
                 expires: datetime
             );

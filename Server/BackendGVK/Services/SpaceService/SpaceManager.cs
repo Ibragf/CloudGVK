@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using System.Net;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace BackendGVK.Services.SpaceService
 {
@@ -17,9 +18,10 @@ namespace BackendGVK.Services.SpaceService
             _cloudManager = cloudManager;
         }
 
-        public async Task<FileModel> UploadLargeFiles(HttpContext context, string directory)
+        public async Task<IEnumerable<FileModel>> UploadLargeFiles(HttpContext context, string directoryId)
         {
-            if (context == null || directory == null) throw new ArgumentNullException();
+            List<FileModel> files = new List<FileModel>();
+            if (context == null || directoryId == null) throw new ArgumentNullException();
 
             var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(context.Request.ContentType), 70);
             var reader = new MultipartReader(boundary, context.Request.Body);
@@ -36,52 +38,109 @@ namespace BackendGVK.Services.SpaceService
                     string userId = context.User.Claims.FirstOrDefault(x => x.Type == "Id")?.Value!;
                     FillContentDispositionData(data, contentDisposition!);
 
-                    var file = await IfExistsCreateRelationshipAsync(userId, contentDisposition, directory, data);
-                    if(file != null) return file;
-
-                    using (var sha256 = SHA256.Create())
+                    var file = await IfExistsCreateRelationshipAsync(userId, contentDisposition!, directoryId, data);
+                    if (file != null)
                     {
-                        string userId = context.User.Claims.FirstOrDefault(x => x.Type == "Id")?.Value!;
-                        string value = userId + untrustedName + DateTime.UtcNow.ToString();
-                        trustedName = sha256.ComputeHash();
+                        files.Add(file);
+                        continue;
                     }
+
+                    string trustedName = GenerateTrustedName(userId, data);
+                    string destPath = await _cloudManager.GetPathAsync(userId, directoryId, ElementTypes.Directory);
+                    file = new FileModel
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        CloudPath = Path.Combine(destPath, data["name"]),
+                        Size = data["size"],
+                        MD5Hash = data["md5"],
+                        TrustedName = trustedName,
+                        UntrustedName = data["name"],
+                    };
+
+                    var isAdded = await _cloudManager.AddFileAsync(userId, file, directoryId);
+                    if (isAdded) files.Add(file);
+                    else continue;//!!!!!!!!!!!!!!
+
+                    bool result = await FilesHelper.ProcessStreamingFileAsync(section, file.TrustedName);
+                    if (!result)
+                    {
+                        await _cloudManager.RemoveAsync(userId, file.Id, file.Type);
+                        continue;
+                    }
+                    /*try
+                    {
+                        bool result = await FilesHelper.ProcessStreamingFileAsync(section, file.TrustedName);
+                        if(!result)
+                        {
+                            await _cloudManager.RemoveAsync(userId, file.Id, file.Type);
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        await _cloudManager.RemoveAsync(userId, file.Id, file.Type);
+                        continue;
+                    }*/
+
+                    section = await reader.ReadNextSectionAsync();
                 }
             }
+
+            return files;
         }
 
-        private async Task<FileModel> IfExistsCreateRelationshipAsync(string userId, ContentDispositionHeaderValue contentDisposition, string directory, Dictionary<string, string> dictionary)
+        private string GenerateTrustedName(string userId, Dictionary<string, string> data)
+        {
+            string trustedName;
+            using (var sha256 = SHA256.Create())
+            {
+                string value = userId + data["name"] + DateTime.UtcNow.ToString() + data["size"];
+                var buffer = Encoding.UTF8.GetBytes(value);
+                var hash = sha256.ComputeHash(buffer, 0, buffer.Length);
+                StringBuilder sb = new StringBuilder();
+                foreach (var byt in hash)
+                {
+                    sb.Append(byt.ToString("x2"));
+                }
+                trustedName = sb.ToString();
+            }
+
+            return trustedName;
+        }
+        private async Task<FileModel> IfExistsCreateRelationshipAsync(string userId, ContentDispositionHeaderValue contentDisposition, string directoryId, Dictionary<string, string> dictionary)
         {
             string hashSum = dictionary["md5"];
 
-            var file = await _cloudManager.GetFileByHashSumAsync(hashSum);
+            var files = await _cloudManager.Files.Query.Where(nameof(FileModel.MD5Hash), hashSum).ExecuteAsync();
+            var file = files.FirstOrDefault();
 
             if (file != null)
             {
-                string destPath = await _cloudManager.GetPathAsync(userId, directory, ElementTypes.Directory);
-                ulong size;
-                if (!ulong.TryParse(dictionary["size"], out size)) return null!;
+                string destPath = await _cloudManager.GetPathAsync(userId, directoryId, ElementTypes.Directory);
 
-                file.CloudPath = Path.Combine(destPath, contentDisposition.FileName.Value);
-                file.Id = Guid.NewGuid().ToString();
-                file.UntrustedName = dictionary["name"];
-                file.Size = size;
-                file.isShared = false;
+                if (file.Size == dictionary["size"])
+                {
+                    file.CloudPath = Path.Combine(destPath, contentDisposition.FileName.Value);
+                    file.Id = Guid.NewGuid().ToString();
+                    file.UntrustedName = dictionary["name"];
+                    file.isShared = false;
 
-                bool isAdded = await _cloudManager.AddFileAsync(userId, file, directory);
+                    bool isAdded = await _cloudManager.AddFileAsync(userId, file, directoryId);
 
-                if (isAdded) return file;
+                    if (isAdded) return file;
+                }
             }
 
             return null!;
         }
-
         private bool FillContentDispositionData(Dictionary<string, string> dictionary, ContentDispositionHeaderValue contentDisposition)
         {
             var nameValues = contentDisposition.Name.Value.Split('.');
-            if (nameValues.Length != 2 || nameValues[0] == null || nameValues[1] == null || nameValues[0].Length < 32) return false;
+            if (nameValues.Length != 2 || nameValues[0] == null || nameValues[1] == null || nameValues[0].Length < 10) return false;
             var untrustedName = WebUtility.HtmlEncode(contentDisposition.FileName.Value);
 
-            dictionary.Add("md5",nameValues[0]);
+            dictionary.Clear();
+            dictionary.Add("md5", nameValues[0]);
             dictionary.Add("size", nameValues[1]);
             dictionary.Add("name", untrustedName);
 

@@ -6,6 +6,7 @@ using BackendGVK.Services;
 using BackendGVK.Services.CloudService;
 using BackendGVK.Services.Configs;
 using BackendGVK.Services.EmailSender;
+using BackendGVK.Services.SpaceService;
 using BackendGVK.Services.TokenManagerService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -68,6 +69,7 @@ builder.Services.AddSingleton<ICloud, CloudManager>();
 builder.Services.AddSingleton<IGraphClient>(graphClient);
 builder.Services.AddSingleton<IAuthorizationHandler, isOwnerHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, HasAccessHandler>();
+builder.Services.AddSingleton<SpaceManager>();
 
 
 var app = builder.Build();
