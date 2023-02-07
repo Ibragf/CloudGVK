@@ -113,7 +113,11 @@ namespace BackendGVK.Controllers
                 claims.Add(new Claim("HomeDir", homeDirId));
 
                 token = await _tokenManager.GenerateTokenAsync(user.Id, claims, model.FingerPrint);
-                if (token == null) return BadRequest();
+                if (token == null)
+                {
+                    ModelState.AddModelError("errors", $"Token is null.{model.Password} - {model.FingerPrint}-{user.Id}");
+                    return BadRequest(ModelState);
+                }
             }
             else
             {

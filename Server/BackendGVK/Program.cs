@@ -16,7 +16,7 @@ using Neo4jClient;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Configuration.AddUserSecrets<Program>();
+//builder.Configuration.AddUserSecrets<Program>();
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer").Value;
 var audience = builder.Configuration.GetSection("JwtSettings:Audience").Value;
 var secretKey = builder.Configuration.GetSection("JwtSettings:SecretKey").Value;

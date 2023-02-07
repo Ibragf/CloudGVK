@@ -18,9 +18,9 @@ namespace BackendGVK.Services.SpaceService
             _cloudManager = cloudManager;
         }
 
-        public async Task<IEnumerable<FileModel>> UploadLargeFiles(HttpContext context, string directoryId)
+        public async Task<IEnumerable<Element>> UploadLargeFiles(HttpContext context, string directoryId)
         {
-            List<FileModel> files = new List<FileModel>();
+            List<Element> files = new List<Element>();
             if (context == null || directoryId == null) throw new ArgumentNullException();
 
             var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(context.Request.ContentType), 70);
@@ -42,6 +42,7 @@ namespace BackendGVK.Services.SpaceService
                     if (file != null)
                     {
                         files.Add(file);
+                        section = await reader.ReadNextSectionAsync();
                         continue;
                     }
 
@@ -59,7 +60,11 @@ namespace BackendGVK.Services.SpaceService
 
                     var isAdded = await _cloudManager.AddFileAsync(userId, file, directoryId);
                     if (isAdded) files.Add(file);
-                    else continue;//!!!!!!!!!!!!!!
+                    else
+                    {
+                        section = await reader.ReadNextSectionAsync();
+                        continue;
+                    }
 
                     bool result = await FilesHelper.ProcessStreamingFileAsync(section, file.TrustedName);
                     if (!result)

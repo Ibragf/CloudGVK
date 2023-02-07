@@ -4,10 +4,12 @@ D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\appsettings.json
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\BackendGVK.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\BackendGVK.runtimeconfig.json
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\BackendGVK.pdb
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\MailKit.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.AspNetCore.Cryptography.Internal.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.Bcl.AsyncInterfaces.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.Data.Sqlite.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.EntityFrameworkCore.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.EntityFrameworkCore.Abstractions.dll
@@ -26,7 +28,12 @@ D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.IdentityMo
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.IdentityModel.Tokens.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.OpenApi.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Microsoft.Win32.SystemEvents.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\MimeKit.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Neo4j.Driver.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Neo4jClient.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Newtonsoft.Json.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\Pipelines.Sockets.Unofficial.dll
+D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\BouncyCastle.Crypto.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\SQLitePCLRaw.batteries_v2.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\SQLitePCLRaw.core.dll
 D:\GitDesktop\CloudGVK\Server\BackendGVK\obj\Docker\publish\SQLitePCLRaw.provider.e_sqlite3.dll

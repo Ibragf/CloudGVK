@@ -20,4 +20,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 COPY ./Sqlite.db .
+COPY ./mail.txt .
 ENTRYPOINT ["dotnet", "BackendGVK.dll"]

@@ -88,7 +88,7 @@ namespace BackendGVK.Controllers
             return Forbid();
         }
 
-        [HttpGet("add/dir")]
+        [HttpGet("add/dir")] //добавить возвращение элемента 
         public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName,[Required] string destinationId)
         {
             string id = GetUserId();
