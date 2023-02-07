@@ -125,10 +125,17 @@ namespace BackendGVK.Controllers
                 return BadRequest(ModelState);
             }
 
-            return Ok(token);
+            var invitations = await cloud.GetInvitationsAsync(user.Id);
+            var output = new
+            {
+                token = token,
+                invitations = invitations,
+            };
+
+            return Ok(output);
         }
 
-        [HttpPost("logout")]
+        [HttpDelete("logout")]
         public async Task<IActionResult> LogOut(string token)
         {
             bool result = await _tokenManager.RemoveTokenAsync(token);

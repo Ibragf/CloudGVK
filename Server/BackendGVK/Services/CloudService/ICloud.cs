@@ -12,13 +12,14 @@ namespace BackendGVK.Services.CloudService
         Task<InternalElements> GetElementsAsync(string userId, string directoryId);
         Task<bool> ChangeNameAsync(string userId, string oldName, string currentName, ElementTypes type);
         Task RemoveAsync(string userId, string elementId, ElementTypes type);
+        Task<List<string>> DeleteAsync(string userId, string elementId, ElementTypes type);
         Task<bool> AddFileAsync(string userId, FileModel file, string destinationId);
         Task<bool> AddDirectoryAsync(string userId, DirectoryModel dir, string destinationId);
         Task<string> GetPathAsync(string userId, string elementId, ElementTypes type);
         Task MoveToAsync(string userId, string elementId, string destinationId, ElementTypes type);
         Task CopyToAsync(string userId, string elementId, string destinationId, ElementTypes type);
         Task MoveToAccessModeAsync(string userId, string elementId, string destinationId, ElementTypes type);
-        Task RemoveAccessAsync(string elementId, string userId);
+        Task RemoveAccessAsync(string elementId, string userId = null!);
         Task CreateHomeDirAsync(string userId, string email);
         Task RemoveHomeDirAsync(string userId);
         Task<bool> isOwnerAsync(string userId, string elementId, ElementTypes type);
@@ -29,6 +30,7 @@ namespace BackendGVK.Services.CloudService
         Task AcceptInvitationAsync(string userId, InvitationModel invitation);
         Task<string> DeleteInvitationAsync(InvitationModel invitation);
         Task<string> GetHomeDirId(string userId);
+        Task<string> GetDirSizeAsync(string userId, string dirId);
         Task SaveChangesAsync();
     }
 

@@ -8,6 +8,5 @@ namespace BackendGVK.Models
         public string DirectoryId { get; set; }
         public string From { get; set; }
         public string Directory { get; set; }
-        public string Size { get; set; }
     }
 }

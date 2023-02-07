@@ -7,10 +7,10 @@ namespace BackendGVK.Models
         public string Id { get; set; } = null!;
         public virtual ElementTypes Type { get; }
         public string CloudPath { get; set; } = null!;
-        public string Size { get; set; }
         public bool isAdded { get; set; }
         public string UntrustedName { get; set; } = null!;
         public bool isShared { get; set; }
+        public DateTime? DeleteDate { get; set; }
     }
 
     public enum ElementTypes
