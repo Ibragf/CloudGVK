@@ -17,8 +17,10 @@ namespace BackendGVK.Services.TokenManagerService
         private readonly JwtSettings _jwtSettings;
         private readonly IDistributedCache _cache;
         private readonly AppDbContext _dbContext;
-        public TokenManager(IDistributedCache cache, IOptions<JwtSettings> jwtSettings, AppDbContext context)
+        private readonly IDateProvider _dateProvider;
+        public TokenManager(IDistributedCache cache, IOptions<JwtSettings> jwtSettings, AppDbContext context, IDateProvider dateProvider)
         {
+            _dateProvider = dateProvider;
             _cache = cache;
             _jwtSettings = jwtSettings.Value;
             _dbContext = context;
@@ -27,22 +29,13 @@ namespace BackendGVK.Services.TokenManagerService
         {
             DateTime dateTime;
             string jwt = GenerateToken(claims, out dateTime);
+
             string email = claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)!.Value;
             string hashFinger = GetHash256(fingerPrint + email);
 
             var result = await _dbContext.Tokens.FirstOrDefaultAsync(x => x.Id == hashFinger);
 
-            if (result != null)
-            {
-                bool isDeactive = await DeactiveTokenAsync(result.Token);
-                if (isDeactive)
-                {
-                    result.Token = jwt;
-                    result.Exp = dateTime;
-                }
-                else return null!;
-            }
-            else
+            if (result == null)
             {
                 AuthToken token = new AuthToken
                 {
@@ -52,6 +45,16 @@ namespace BackendGVK.Services.TokenManagerService
                     ApplicationUserId = userId,
                 };
                 await _dbContext.Tokens.AddAsync(token);
+            }
+            else
+            {
+                bool isDeactive = await DeactiveTokenAsync(result.Token);
+                if (isDeactive)
+                {
+                    result.Token = jwt;
+                    result.Exp = dateTime;
+                }
+                else return null!;
             }
 
             await _dbContext.SaveChangesAsync();
@@ -88,6 +91,7 @@ namespace BackendGVK.Services.TokenManagerService
 
             return jwt;
         }
+
         public async Task<bool> RemoveTokenAsync(string token)
         {
             if(token == null) return false;
@@ -103,6 +107,7 @@ namespace BackendGVK.Services.TokenManagerService
 
             return true;
         }
+
         public async Task<bool> isActiveTokenAsync(string token)
         {
             string result = await _cache.GetStringAsync($"tokens:{token}");
@@ -136,6 +141,7 @@ namespace BackendGVK.Services.TokenManagerService
             dateTime = dateTime.AddSeconds(unixTimeStamp).ToUniversalTime();
             return dateTime;
         }
+
         private ClaimsPrincipal GetClaimsPrincipal(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
@@ -151,6 +157,7 @@ namespace BackendGVK.Services.TokenManagerService
             SecurityToken securityToken;
             var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
             var jwtSecurityToken = securityToken as JwtSecurityToken;
+
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
                 return null!;
@@ -158,25 +165,29 @@ namespace BackendGVK.Services.TokenManagerService
 
             return principal;
         }
+
         private string GenerateToken(IEnumerable<Claim> claims, out DateTime datetime)
         {
             var signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
-            datetime = DateTime.UtcNow.AddMinutes(15);
+            datetime = _dateProvider.GetCustomDateTime(minutes: 15);
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 signingCredentials: new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256),
                 claims: claims,
-                notBefore: DateTime.UtcNow,
+                notBefore: _dateProvider.GetCurrentDate(),
                 expires: datetime
             );
 
             string token = new JwtSecurityTokenHandler().WriteToken(jwt);
             return token;
         }
+
         private string GetHash256(string value)
         {
+            if (value == null) throw new ArgumentNullException();
+
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             byte[] hashBytes;
 

@@ -18,7 +18,7 @@ namespace BackendGVK.Policy.isAllowed
             string id = context.User.Claims.FirstOrDefault(x => x.Type == "Id")?.Value!;
             if (id == null) return;
 
-            bool isOwner = await _cloudManager.isOwnerAsync(id, resource.ElementId, resource.Type);
+            bool isOwner = await _cloudManager.isOwnerAsync(id, resource);
 
             if (isOwner) context.Succeed(requirement);
         }

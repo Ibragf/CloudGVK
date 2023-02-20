@@ -18,7 +18,7 @@ namespace BackendGVK.Policy.isAllowed
             string id = context.User.Claims.FirstOrDefault()?.Value!;
             if (id == null) return;
 
-            bool hasAccess = await _cloudManager.HasAccessAsync(id, resource.ElementId, resource.Type);
+            bool hasAccess = await _cloudManager.HasAccessAsync(id, resource);
 
             if (hasAccess) context.Succeed(requirement);
         }

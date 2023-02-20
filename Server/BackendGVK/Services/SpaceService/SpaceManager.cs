@@ -12,16 +12,20 @@ namespace BackendGVK.Services.SpaceService
 {
     public class SpaceManager
     {
+        private const string SIZE = "size";
+        private const string CRCMD5 = "CrcHash";
+        private const string FILENAME = "filename";
+
         private readonly ICloud _cloudManager;
         public SpaceManager(ICloud cloudManager)
         {
             _cloudManager = cloudManager;
         }
 
-        public async Task<IEnumerable<Element>> UploadLargeFiles(HttpContext context, string directoryId)
+        public async Task<IEnumerable<Element>> UploadLargeFiles(HttpContext context, string destinationPath)
         {
             List<Element> files = new List<Element>();
-            if (context == null || directoryId == null) throw new ArgumentNullException();
+            if (context == null || destinationPath == null) throw new ArgumentNullException();
 
             var boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(context.Request.ContentType), 70);
             var reader = new MultipartReader(boundary, context.Request.Body);
@@ -38,7 +42,7 @@ namespace BackendGVK.Services.SpaceService
                     string userId = context.User.Claims.FirstOrDefault(x => x.Type == "Id")?.Value!;
                     FillContentDispositionData(data, contentDisposition!);
 
-                    var file = await IfExistsCreateRelationshipAsync(userId, contentDisposition!, directoryId, data);
+                    var file = await IfExistsCreateRelationshipAsync(userId, contentDisposition!, destinationPath, data);
                     if (file != null)
                     {
                         files.Add(file);
@@ -47,18 +51,18 @@ namespace BackendGVK.Services.SpaceService
                     }
 
                     string trustedName = GenerateTrustedName(userId, data);
-                    string destPath = await _cloudManager.GetPathAsync(userId, directoryId, ElementTypes.Directory);
                     file = new FileModel
                     {
                         Id = Guid.NewGuid().ToString(),
-                        CloudPath = Path.Combine(destPath, data["name"]),
-                        Size = data["size"],
-                        MD5Hash = data["md5"],
+                        CloudPath = Path.Combine(destinationPath, data[FILENAME]),
+                        Size = data[SIZE],
+                        CrcHash = data[CRCMD5],
                         TrustedName = trustedName,
-                        UntrustedName = data["name"],
+                        UntrustedName = data[FILENAME],
+                        OwnerId = userId,
                     };
 
-                    var isAdded = await _cloudManager.AddFileAsync(userId, file, directoryId);
+                    var isAdded = await _cloudManager.AddFileAsync(userId, file, destinationPath);
                     if (isAdded) files.Add(file);
                     else
                     {
@@ -99,7 +103,7 @@ namespace BackendGVK.Services.SpaceService
             string trustedName;
             using (var sha256 = SHA256.Create())
             {
-                string value = userId + data["name"] + DateTime.UtcNow.ToString() + data["size"];
+                string value = userId + data[FILENAME] + DateTime.UtcNow.ToString() + data[SIZE];
                 var buffer = Encoding.UTF8.GetBytes(value);
                 var hash = sha256.ComputeHash(buffer, 0, buffer.Length);
                 StringBuilder sb = new StringBuilder();
@@ -112,25 +116,25 @@ namespace BackendGVK.Services.SpaceService
 
             return trustedName;
         }
-        private async Task<FileModel> IfExistsCreateRelationshipAsync(string userId, ContentDispositionHeaderValue contentDisposition, string directoryId, Dictionary<string, string> dictionary)
+        private async Task<FileModel> IfExistsCreateRelationshipAsync(string userId, ContentDispositionHeaderValue contentDisposition, string directoryPath, Dictionary<string, string> dictionary)
         {
-            string hashSum = dictionary["md5"];
+            string hashSum = dictionary[CRCMD5];
 
-            var files = await _cloudManager.Files.Query.Where(nameof(FileModel.MD5Hash), hashSum).ExecuteAsync();
+            var files = await _cloudManager.Files.Query.Where(nameof(FileModel.CrcHash), hashSum).ExecuteAsync();
             var file = files.FirstOrDefault();
 
             if (file != null)
             {
-                string destPath = await _cloudManager.GetPathAsync(userId, directoryId, ElementTypes.Directory);
+                string destPath = await _cloudManager.GetPathAsync(userId, directoryPath, ElementTypes.Directory);
 
-                if (file.Size == dictionary["size"])
+                if (file.Size == dictionary[SIZE])
                 {
                     file.CloudPath = Path.Combine(destPath, contentDisposition.FileName.Value);
                     file.Id = Guid.NewGuid().ToString();
-                    file.UntrustedName = dictionary["name"];
+                    file.UntrustedName = dictionary[FILENAME];
                     file.isShared = false;
 
-                    bool isAdded = await _cloudManager.AddFileAsync(userId, file, directoryId);
+                    bool isAdded = await _cloudManager.AddFileAsync(userId, file, directoryPath);
 
                     if (isAdded) return file;
                 }
@@ -145,9 +149,9 @@ namespace BackendGVK.Services.SpaceService
             var untrustedName = WebUtility.HtmlEncode(contentDisposition.FileName.Value);
 
             dictionary.Clear();
-            dictionary.Add("md5", nameValues[0]);
-            dictionary.Add("size", nameValues[1]);
-            dictionary.Add("name", untrustedName);
+            dictionary.Add(CRCMD5, nameValues[0]);
+            dictionary.Add(SIZE, nameValues[1]);
+            dictionary.Add(FILENAME, untrustedName);
 
             return true;
         }

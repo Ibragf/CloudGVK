@@ -70,6 +70,7 @@ builder.Services.AddSingleton<IGraphClient>(graphClient);
 builder.Services.AddSingleton<IAuthorizationHandler, isOwnerHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, HasAccessHandler>();
 builder.Services.AddSingleton<SpaceManager>();
+builder.Services.AddSingleton<IDateProvider, DateProvider>();
 
 
 var app = builder.Build();

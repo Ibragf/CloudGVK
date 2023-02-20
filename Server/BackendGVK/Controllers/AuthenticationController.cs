@@ -106,7 +106,7 @@ namespace BackendGVK.Controllers
             if (result.Succeeded)
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                var homeDirId = await cloud.GetHomeDirId(user.Id);
+                var homeDirId = await cloud.GetHomeDirIdAsync(user.Id);
                 if (homeDirId == null) return BadRequest();
 
                 claims.Add(new Claim("Id", user.Id));
@@ -130,6 +130,7 @@ namespace BackendGVK.Controllers
             {
                 token = token,
                 invitations = invitations,
+                userId = user.Id
             };
 
             return Ok(output);

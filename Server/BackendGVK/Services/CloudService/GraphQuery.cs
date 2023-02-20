@@ -15,10 +15,16 @@ namespace BackendGVK.Services.CloudService
             _client = client;
         }
 
+        private readonly ElementTypes Type;
+        private string userId = null!;
         private Dictionary<string, string> WhereValues = new Dictionary<string, string>();
         private Dictionary<string, string> UpdateValues = new Dictionary<string, string>();
-        private readonly ElementTypes Type;
 
+        public GraphQuery<T> For(string userId)
+        {
+            this.userId = userId;
+            return this;
+        }
 
         public GraphQuery<T> Where(string propertyName, string value)
         {
@@ -51,7 +57,14 @@ namespace BackendGVK.Services.CloudService
                 sb.Append("}");
                 whereString = sb.ToString();
 
-                cypher = cypher.OptionalMatch($"(e:{Type} {whereString})");
+                string user = string.Empty;
+                if(userId != null)
+                {
+                    user = $"(:User {{Id : $userId}})";
+                    cypher = cypher.WithParam("userId", userId);
+                }
+
+                cypher = cypher.OptionalMatch($"({user})-[*]->(e:{Type} {whereString})");
 
                 if (UpdateValues.Count > 0)
                 {

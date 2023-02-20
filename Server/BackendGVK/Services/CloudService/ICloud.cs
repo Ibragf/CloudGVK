@@ -9,27 +9,29 @@ namespace BackendGVK.Services.CloudService
     {
         GraphSet<FileModel> Files { get; set; }
         GraphSet<DirectoryModel> Directories { get; set; }
-        Task<InternalElements> GetElementsAsync(string userId, string directoryId);
+        Task<InternalElements> GetElementsAsync(string userId, CloudInputModel input);
         Task<bool> ChangeNameAsync(string userId, string oldName, string currentName, ElementTypes type);
-        Task RemoveAsync(string userId, string elementId, ElementTypes type);
-        Task<List<string>> DeleteAsync(string userId, string elementId, ElementTypes type);
-        Task<bool> AddFileAsync(string userId, FileModel file, string destinationId);
-        Task<bool> AddDirectoryAsync(string userId, DirectoryModel dir, string destinationId);
+        Task RemoveAsync(string userId, CloudInputModel input);
+        Task DeleteAsync(string userId, CloudInputModel input);
+        Task<InternalElements> GetRemovedElements(string userId);
+        Task RestoreElementAsync(string userId, CloudInputModel input);
+        Task<bool> AddFileAsync(string userId, FileModel file, CloudInputModel input);
+        Task<bool> AddDirectoryAsync(string userId, DirectoryModel dir, CloudInputModel input);
         Task<string> GetPathAsync(string userId, string elementId, ElementTypes type);
-        Task MoveToAsync(string userId, string elementId, string destinationId, ElementTypes type);
-        Task CopyToAsync(string userId, string elementId, string destinationId, ElementTypes type);
-        Task MoveToAccessModeAsync(string userId, string elementId, string destinationId, ElementTypes type);
-        Task RemoveAccessAsync(string elementId, string userId = null!);
+        Task MoveToAsync(string userId, CloudInputModel input);
+        Task CopyToAsync(string userId, CloudInputModel input);
+        Task MoveToAccessModeAsync(string userId, CloudInputModel input);
+        Task RemoveAccessAsync(CloudInputModel input, string forUserId = null!);
         Task CreateHomeDirAsync(string userId, string email);
         Task RemoveHomeDirAsync(string userId);
-        Task<bool> isOwnerAsync(string userId, string elementId, ElementTypes type);
-        Task<bool> HasAccessAsync(string userId, string elementId, ElementTypes type);
+        Task<bool> isOwnerAsync(string userId, CloudInputModel inputModel);
+        Task<bool> HasAccessAsync(string userId, CloudInputModel inputModel);
         Task<IEnumerable<InvitationModel>> GetInvitationsAsync(string userId);
         Task GrantAccessForAsync(ClaimsPrincipal principal, string toEmail, DirectoryModel directory);
         Task<bool> ExistsUserAsync(string email);
         Task AcceptInvitationAsync(string userId, InvitationModel invitation);
         Task<string> DeleteInvitationAsync(InvitationModel invitation);
-        Task<string> GetHomeDirId(string userId);
+        Task<string> GetHomeDirIdAsync(string userId);
         Task<string> GetDirSizeAsync(string userId, string dirId);
         Task SaveChangesAsync();
     }
