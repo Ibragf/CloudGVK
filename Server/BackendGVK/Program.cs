@@ -16,7 +16,7 @@ using Neo4jClient;
 var builder = WebApplication.CreateBuilder(args);
 
 
-//builder.Configuration.AddUserSecrets<Program>();
+builder.Configuration.AddUserSecrets<Program>();
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer").Value;
 var audience = builder.Configuration.GetSection("JwtSettings:Audience").Value;
 var secretKey = builder.Configuration.GetSection("JwtSettings:SecretKey").Value;
@@ -55,7 +55,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = builder.Configuration.GetConnectionString("Redis:Instance");
     options.Configuration = builder.Configuration.GetConnectionString("Redis:Configuration");
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
@@ -69,7 +69,8 @@ builder.Services.AddSingleton<ICloud, CloudManager>();
 builder.Services.AddSingleton<IGraphClient>(graphClient);
 builder.Services.AddSingleton<IAuthorizationHandler, isOwnerHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, HasAccessHandler>();
-builder.Services.AddSingleton<SpaceManager>();
+builder.Services.AddScoped<SpaceManager>();
+builder.Services.AddScoped<FileLoader>();
 builder.Services.AddSingleton<IDateProvider, DateProvider>();
 
 

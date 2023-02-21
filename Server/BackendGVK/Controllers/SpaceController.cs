@@ -1,4 +1,5 @@
-﻿using BackendGVK.Services.SpaceService;
+﻿using BackendGVK.Extensions;
+using BackendGVK.Services.SpaceService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -23,9 +24,9 @@ namespace BackendGVK.Controllers
         [DisableFormValueModelBinding]
         [RequestFormLimits(MultipartBodyLengthLimit = 1024L*1024L*1024L*10L)]
         [RequestSizeLimit(1024L * 1024L * 1024L * 10L)]
-        public async Task<IActionResult> UploadLargeFiles([Required]string directoryId)
+        public async Task<IActionResult> UploadLargeFiles([Required] string directoryId, [Required] string connectionId)
         {
-            var files = await _spaceManager.UploadLargeFiles(HttpContext, directoryId);
+            var files = await _spaceManager.UploadFiles(directoryId, connectionId);
 
             return Ok(files);
         }
