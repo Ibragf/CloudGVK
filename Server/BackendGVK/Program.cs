@@ -59,6 +59,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+builder.Services.AddSignalR();
 
 builder.Services.AddTransient(typeof(GoogleCaptcha));
 
@@ -95,6 +96,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
+    endpoints.MapHub<ProgressLoadingHub>("/progress");
 });
 
 app.Run();

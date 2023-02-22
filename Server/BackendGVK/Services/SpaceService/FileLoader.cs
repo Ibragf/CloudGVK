@@ -1,6 +1,7 @@
 ﻿using BackendGVK.Controllers;
 using BackendGVK.Models;
 using BackendGVK.Services.CloudService;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using System.Drawing;
@@ -22,6 +23,7 @@ namespace BackendGVK.Services.SpaceService
         private string _trustedName = null!;
         private string _filePath = null!;
         private readonly IDateProvider _dateProvider;
+        private readonly IHubContext<ProgressLoadingHub> _hubContext;
 
         public string FilePath
         {
@@ -47,8 +49,9 @@ namespace BackendGVK.Services.SpaceService
         }
         public Dictionary<int, string> ContentDispositionData { get; private set; }
 
-        public FileLoader(IDateProvider dateProvider)
+        public FileLoader(IDateProvider dateProvider, IHubContext<ProgressLoadingHub> hubContext)
         {
+            _hubContext = hubContext;
             _dateProvider = dateProvider;
             ContentDispositionData = new Dictionary<int, string>();
         }
@@ -58,6 +61,7 @@ namespace BackendGVK.Services.SpaceService
             const int chunkSize = 1024 * 1024; // 1МБ
             var buffer = new byte[chunkSize];
             int bytesRead = 0;
+            string connectionId = ContentDispositionData[HUB_CONNECTION];
 
             using (var stream = new FileStream(FilePath, FileMode.Create))
             {
@@ -66,12 +70,13 @@ namespace BackendGVK.Services.SpaceService
                     bytesRead = await section.Body.ReadAsync(buffer, 0, buffer.Length);
                     await stream.WriteAsync(buffer, 0, bytesRead);
                     size += (ulong) bytesRead;
-
+                    var task = _hubContext.Clients.Client(connectionId).SendAsync("progressChanged", bytesRead);
                 } while (bytesRead > 0);
             }
 
             file.Size = size.ToString();
             ContentDispositionData.Clear();
+            await _hubContext.Clients.Client(connectionId).SendAsync("closeConnection");
             if (File.Exists(FilePath)) return true;
 
             return false;
