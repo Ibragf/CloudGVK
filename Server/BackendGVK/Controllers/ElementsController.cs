@@ -1,4 +1,5 @@
-﻿using BackendGVK.Models;
+﻿using BackendGVK.Extensions;
+using BackendGVK.Models;
 using BackendGVK.Services.CloudService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -8,24 +9,22 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BackendGVK.Controllers
 {
-    [Route("api/cloud")]
+    [Route("api/elements")]
     [ApiController]
     [EnableCors("AllowAnyOrigin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class CloudController : ControllerBase
+    public class ElementsController : ControllerBase
     {
         private readonly ICloud _cloudManager;
-        private readonly IAuthorizationService _authService;
-        public CloudController(ICloud cloud, IAuthorizationService authorizationService) 
+        public ElementsController(ICloud cloud)
         {
-            _authService = authorizationService;
             _cloudManager = cloud;
         }
 
-        [HttpGet("elements")]
+        [HttpGet]
         public async Task<IActionResult> GetElements(CloudInputModel input)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             string homeDirId = User.Claims.FirstOrDefault(x => x.Type == "HomeDir")?.Value!;
             if (id == null || homeDirId == null) return BadRequest();
 
@@ -41,70 +40,10 @@ namespace BackendGVK.Controllers
             return Ok(elements);
         }
 
-        [HttpGet("dirs/size")]
-        public async Task<IActionResult> GetSize(string dirId)
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            string dirSize = await _cloudManager.GetDirSizeAsync(id, dirId);
-
-            return Ok(dirSize);
-        }
-
-        [HttpGet("invitations")]
-        public async Task<IActionResult> GetInvitations()
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            var invitations = await _cloudManager.GetInvitationsAsync(id);
-
-            return Ok(invitations);
-        }
-
-        [HttpPost("invintations/accept")]
-        public async Task<IActionResult> AcceptInvitation(InvitationModel invitation)
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            await _cloudManager.AcceptInvitationAsync(id, invitation);
-
-            return Ok();
-        }
-
-        [HttpPost("invintations/reject")]
-        public async Task<IActionResult> RejectInvitation(InvitationModel invitation)
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            await _cloudManager.DeleteInvitationAsync(invitation);
-
-            return Ok();
-        }
-
-        [HttpPost("invintations/send")]
-        public async Task<IActionResult> GrantAccess(DirectoryModel model,[Required] string toEmail)
-        {
-            string id = GetUserId();
-            if (id == null) return BadRequest();
-
-            var cloudInput = new CloudInputModel { TargetId = model.Id, TargetPath = model.CloudPath, Type = model.Type };
-
-            bool isOwner = await _cloudManager.isOwnerAsync(id, cloudInput);
-            if (!isOwner) return Forbid();
-
-            await _cloudManager.GrantAccessForAsync(User, toEmail, model);
-
-            return Ok();
-        }
-
-        [HttpPut("elements/access/remove")]
+        [HttpDelete("access")]
         public async Task<IActionResult> RemoveAccess(string? forUserId, CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             bool isOwner = await _cloudManager.isOwnerAsync(id, model);
@@ -115,13 +54,13 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPost("elements/copy")]
+        [HttpPost("copy")]
         public async Task<IActionResult> CopyElement(CloudInputModel model)
         {
-            string id = GetUserId();
-            if (id == null || model.DestinationId==null) return BadRequest();
+            string id = AuthHelper.GetUserId(User);
+            if (id == null || model.DestinationId == null) return BadRequest();
 
-            bool isAllowed = await isAllowedAsync(id, model);
+            bool isAllowed = await AuthHelper.isAllowedAsync(id, model, _cloudManager);
             if (isAllowed)
             {
                 await _cloudManager.CopyToAsync(id, model);
@@ -131,10 +70,10 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPut("elements/move")]
+        [HttpPut("move")]
         public async Task<IActionResult> MoveElement(CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null || model.DestinationId == null) return BadRequest();
 
             bool isOwner = await _cloudManager.isOwnerAsync(id, model);
@@ -147,7 +86,7 @@ namespace BackendGVK.Controllers
 
             bool hasAccess = await _cloudManager.HasAccessAsync(id, model);
 
-            if(hasAccess)
+            if (hasAccess)
             {
                 await _cloudManager.MoveToAccessModeAsync(id, model);
                 return Ok();
@@ -156,15 +95,15 @@ namespace BackendGVK.Controllers
             return Forbid();
         }
 
-        [HttpPut("elements/name/change")]
+        [HttpPut("name")]
         public async Task<IActionResult> UpdateName(CloudInputModel model, [Required][StringLength(50, MinimumLength = 1)] string currentName)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
-            bool isAllowed = await isAllowedAsync(id, model);
+            bool isAllowed = await AuthHelper.isAllowedAsync(id, model, _cloudManager);
 
-            if(isAllowed)
+            if (isAllowed)
             {
                 if (model.Type == ElementTypes.File)
                     await _cloudManager.Files.Query
@@ -179,14 +118,14 @@ namespace BackendGVK.Controllers
 
                 return Ok();
             }
-            else 
+            else
                 return Forbid();
         }
 
-        [HttpPost("dirs/add")]
+        [HttpPost("dirs")]
         public async Task<IActionResult> AddDirectory([Required][StringLength(50, MinimumLength = 1)] string dirName, CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             DirectoryModel dir = new DirectoryModel
@@ -211,36 +150,15 @@ namespace BackendGVK.Controllers
             }
         }
 
-        private string GetUserId()
+        [HttpGet("dirs/size")]
+        public async Task<IActionResult> GetSize(string dirId)
         {
-            var claim = User.Claims.FirstOrDefault(x => x.Type == "Id");
-            if (claim == null) return null!;
-            return claim.Value;
+            string id = AuthHelper.GetUserId(User);
+            if (id == null) return BadRequest();
+
+            string dirSize = await _cloudManager.GetDirSizeAsync(id, dirId);
+
+            return Ok(dirSize);
         }
-
-        private async Task<bool> isAllowedAsync(string userId, CloudInputModel model)
-        {
-            bool hasAccess = await _cloudManager.HasAccessAsync(userId, model);
-            bool isOwner = await _cloudManager.isOwnerAsync(userId, model);
-
-            return hasAccess || isOwner;
-        }
-    }
-
-    public class InternalElements
-    {
-        public IEnumerable<FileModel> Files { get; set; }
-        public IEnumerable<DirectoryModel> Directories { get; set; }
-        public IEnumerable<DirectoryModel> Shared { get; set; }
-    }
-
-    public class CloudInputModel
-    {
-        public string TargetId { get; set; } = null!;
-        public string DestinationId { get; set; } = null!;
-        public string TargetPath { get; set; } = null!;
-        public string DestinationPath { get; set; } = null!;
-        [Required]
-        public ElementTypes Type { get; set; }
     }
 }

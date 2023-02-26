@@ -109,5 +109,24 @@ namespace BackendGVK.Services.SpaceService
 
             return _files;
         }
+
+        public async Task<string> DownloadElementAsync(CloudInputModel cloudInput)
+        {
+            if(cloudInput.Type == ElementTypes.File)
+            {
+                var files = await _cloudManager.Files.Query.Where(nameof(FileModel.Id), cloudInput.TargetId).ExecuteAsync();
+                var file = files.FirstOrDefault();
+
+                return file?.TrustedName!;
+            }
+
+            if(cloudInput.Type == ElementTypes.Directory)
+            {
+                var dirs = await _cloudManager.Directories.Query.Where(nameof(DirectoryModel.Id), cloudInput.TargetId).ExecuteAsync();
+                var dir = dirs.FirstOrDefault();
+
+                FileEntry
+            }
+        }
     }
 }

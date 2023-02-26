@@ -20,7 +20,7 @@ namespace BackendGVK.Controllers
             _spaceManager = spaceManager;
         }
 
-        [HttpPost("upload/large")]
+        [HttpPost("upload")]
         [DisableFormValueModelBinding]
         [RequestFormLimits(MultipartBodyLengthLimit = 1024L*1024L*1024L*10L)]
         [RequestSizeLimit(1024L * 1024L * 1024L * 10L)]

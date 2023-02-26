@@ -26,6 +26,8 @@ var graphClient = new BoltGraphClient(
         builder.Configuration.GetSection("Neo4jSettings:Login").Value,
         builder.Configuration.GetSection("Neo4jSettings:Password").Value);
 await graphClient.ConnectAsync();
+await graphClient.CreateConstraintsIfNotExistsAsync();
+
 // Add services to the container.
 builder.Services.Configure<SmtpServerSettings>(builder.Configuration.GetSection("SmtpServerAccess"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -60,6 +62,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options => options.AddPolicy("AllowAnyOrigin", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<FileShredderHostedService>();
 
 builder.Services.AddTransient(typeof(GoogleCaptcha));
 

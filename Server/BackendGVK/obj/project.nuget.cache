@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "hg/dBn3Ht1+P1HO/+6soOs/vqVdsJQzN1v++cvIK7kdRd4RNhqYfA7NPTrEBgKUWAcUXoMCAWNa8uAH1o6kxkA==",
+  "dgSpecHash": "XDk1nPfYUHBN/ff576QadA0i41njWbEfh63vQD2BRmo4rM5E5MwfCJ2+uANFKraZm4TMZyMZdyswYdUoP9Kpfg==",
   "success": true,
   "projectFilePath": "D:\\GitDesktop\\CloudGVK\\Server\\BackendGVK\\BackendGVK.csproj",
   "expectedPackageFiles": [
@@ -72,6 +72,7 @@
     "C:\\Users\\Гаджи\\.nuget\\packages\\newtonsoft.json\\13.0.2\\newtonsoft.json.13.0.2.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.0\\pipelines.sockets.unofficial.2.2.0.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\portable.bouncycastle\\1.9.0\\portable.bouncycastle.1.9.0.nupkg.sha512",
+    "C:\\Users\\Гаджи\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.2\\sqlitepclraw.bundle_e_sqlite3.2.1.2.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\sqlitepclraw.core\\2.1.2\\sqlitepclraw.core.2.1.2.nupkg.sha512",
     "C:\\Users\\Гаджи\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.2\\sqlitepclraw.lib.e_sqlite3.2.1.2.nupkg.sha512",

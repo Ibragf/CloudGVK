@@ -1,4 +1,6 @@
-﻿using BackendGVK.Services.CloudService;
+﻿using BackendGVK.Extensions;
+using BackendGVK.Models;
+using BackendGVK.Services.CloudService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -22,7 +24,7 @@ namespace BackendGVK.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAsync() 
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             var internalElements = await _cloudManager.GetRemovedElements(id);
@@ -30,10 +32,10 @@ namespace BackendGVK.Controllers
             return Ok(internalElements);
         }
 
-        [HttpPost("add")]
+        [HttpPost]
         public async Task<IActionResult> RemoveElement(CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             await _cloudManager.RemoveAsync(id, model);
@@ -41,10 +43,10 @@ namespace BackendGVK.Controllers
             return Ok();
         }
 
-        [HttpPost("delete")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteElement(CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             await _cloudManager.DeleteAsync(id, model);
@@ -55,19 +57,12 @@ namespace BackendGVK.Controllers
         [HttpPut("restore")]
         public async Task<IActionResult> RestoreElement(CloudInputModel model)
         {
-            string id = GetUserId();
+            string id = AuthHelper.GetUserId(User);
             if (id == null) return BadRequest();
 
             await _cloudManager.RestoreElementAsync(id, model);
 
             return Ok();
-        }
-
-        private string GetUserId()
-        {
-            var claim = User.Claims.FirstOrDefault(x => x.Type == "Id");
-            if (claim == null) return null!;
-            return claim.Value;
         }
     }
 }

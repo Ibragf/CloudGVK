@@ -88,20 +88,14 @@ namespace BackendGVK.Services.SpaceService
             string secondPart = Path.Combine(firstPart, TrustedName.Substring(3, 3));
             string thirdPart = TrustedName.Substring(6, TrustedName.Length - 6);
 
-            if (Directory.Exists(firstPart))
-            {
-                TrustedName = null!;
-                return null!;
-            }
-            Directory.CreateDirectory(firstPart);
-            if (Directory.Exists(secondPart))
-            {
-                TrustedName = null!;
-                return null!;
-            }
-            Directory.CreateDirectory(secondPart);
+            if (!Directory.Exists(firstPart))
+                Directory.CreateDirectory(firstPart);
+            if (!Directory.Exists(secondPart))
+                Directory.CreateDirectory(secondPart);
 
-            FilePath = Path.Combine(secondPart, thirdPart);
+            string path = Path.Combine(secondPart, thirdPart);
+            if(!File.Exists(path))
+                FilePath = path;
             return FilePath;
         }
 
