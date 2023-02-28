@@ -73,6 +73,7 @@ namespace BackendGVK.Services.SpaceService
                 }
 
                 zipFile.CommitUpdate();
+                zipFile.Close();
                 await _hubContext.Clients.Client(connectionId).SendAsync("closeConnection", connectionId);
 
                 var task = DeleteZipFileAsync(zipPath);

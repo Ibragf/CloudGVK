@@ -67,13 +67,15 @@ namespace BackendGVK.Services.SpaceService
                             continue;
                         }
 
+                        string trustedName = _fileLoader.CreateTrustedName(userId, _fileLoader.ContentDispositionData[FileLoader.FILENAME], _fileLoader.ContentDispositionData[FileLoader.SIZE]);
+                        string path = _fileLoader.CreateFilePath(trustedName);
                         file = new FileModel
                         {
                             Id = Guid.NewGuid().ToString(),
                             CloudPath = Path.Combine(destPath, _fileLoader.ContentDispositionData[FileLoader.FILENAME]),
                             Size = _fileLoader.ContentDispositionData[FileLoader.SIZE],
                             CrcHash = _fileLoader.ContentDispositionData[FileLoader.CRCMD5],
-                            TrustedName = _fileLoader.TrustedName,
+                            TrustedName = path,
                             UntrustedName = _fileLoader.ContentDispositionData[FileLoader.FILENAME],
                             OwnerId = userId,
                         };
@@ -90,13 +92,14 @@ namespace BackendGVK.Services.SpaceService
                         inputModel.TargetId = file.Id;
                         try
                         {
-                            bool result = await _fileLoader.ProcessStreamingFileAsync(section, file);
+                            bool result = await _fileLoader.ProcessRecordingFileAsync(section.Body, path);
                             if(!result)
                             {
                                 await _cloudManager.RemoveAsync(userId, inputModel);
                                 continue;
                             }
-                            await _cloudManager.Files.Query.Where(nameof(FileModel.Id), file.Id).Update(nameof(FileModel.Size), file.Size).ExecuteAsync();
+                            var fileInfo = new FileInfo(path);
+                            await _cloudManager.Files.Query.Where(nameof(FileModel.Id), file.Id).Update(nameof(FileModel.Size), fileInfo.Length.ToString()).ExecuteAsync();
                         }
                         catch
                         {

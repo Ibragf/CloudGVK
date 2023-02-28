@@ -8,12 +8,12 @@ namespace BackendGVK.Services.SpaceService
 {
     public abstract class AbstractLoader
     {
-        protected event ProgressChangedHandler? ProgressChanged;
+        protected event ProgressChangedHandler? progressChanged;
 
         protected readonly IDateProvider _dateProvider;
         protected readonly IWebHostEnvironment _hostEnvironment;
 
-        protected delegate void ProgressChangedHandler(int bytesRead);
+        protected delegate Task ProgressChangedHandler(int bytesRead);
 
         public AbstractLoader(IDateProvider dateProvider, IWebHostEnvironment hostEnvironment) 
         {
@@ -48,6 +48,8 @@ namespace BackendGVK.Services.SpaceService
 
         public virtual string CreateFilePath(string trustedName)
         {
+            if(trustedName == null) throw new ArgumentNullException(nameof(trustedName));
+
             string firstPart = Path.Combine(_hostEnvironment.ContentRootPath, trustedName.Substring(0, 3));
             string secondPart = Path.Combine(firstPart, trustedName.Substring(3, 3));
             string thirdPart = trustedName.Substring(6, trustedName.Length - 6);
@@ -79,8 +81,8 @@ namespace BackendGVK.Services.SpaceService
 
                     await fileStream.WriteAsync(buffer, 0, bytesRead);
 
-                    if (ProgressChanged != null)
-                        ProgressChanged.Invoke(bytesRead);
+                    if (progressChanged != null)
+                        await progressChanged.Invoke(bytesRead);
 
                 } while (bytesRead > 0);
             }
