@@ -55,7 +55,7 @@ namespace BackendGVK.Services.SpaceService
             _dateProvider = dateProvider;
             ContentDispositionData = new Dictionary<int, string>();
         }
-        public async Task<bool> ProcessStreamingFileAsync(MultipartSection section, FileModel file)
+        public virtual async Task<bool> ProcessStreamingFileAsync(MultipartSection section, FileModel file)
         {
             ulong size = 0;
             const int chunkSize = 1024 * 1024; // 1МБ
@@ -99,7 +99,7 @@ namespace BackendGVK.Services.SpaceService
             return FilePath;
         }
 
-        public string CreateTrustedName()
+        public virtual string CreateTrustedName()
         {
             if (TrustedName != null) return TrustedName;
 

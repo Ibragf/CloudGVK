@@ -1,6 +1,8 @@
 ﻿using BackendGVK.Controllers;
+using BackendGVK.Extensions;
 using BackendGVK.Models;
 using BackendGVK.Services.CloudService;
+using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.WebUtilities;
@@ -18,15 +20,17 @@ namespace BackendGVK.Services.SpaceService
         private readonly ICloud _cloudManager;
         private readonly FileLoader _fileLoader;
         private readonly HttpContext _context;
+        private readonly FileArchiver _fileArchiver;
 
         private readonly List<Element> _files;
         private readonly string _boundary;
         private readonly MultipartReader _reader;
-        public SpaceManager(ICloud cloudManager, FileLoader fileLoader, HttpContext context)
+        public SpaceManager(ICloud cloudManager, FileLoader fileLoader, HttpContext context, FileArchiver fileArchiver)
         {
             _context = context;
             _cloudManager = cloudManager;
             _fileLoader = fileLoader;
+            _fileArchiver = fileArchiver;
 
             _files = new List<Element>();
             _boundary = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(_context.Request.ContentType), 70);
@@ -110,7 +114,7 @@ namespace BackendGVK.Services.SpaceService
             return _files;
         }
 
-        public async Task<string> DownloadElementAsync(CloudInputModel cloudInput)
+        public async Task<string> DownloadElementAsync(string connectionId, CloudInputModel cloudInput)
         {
             if(cloudInput.Type == ElementTypes.File)
             {
@@ -122,11 +126,21 @@ namespace BackendGVK.Services.SpaceService
 
             if(cloudInput.Type == ElementTypes.Directory)
             {
+                string userId = AuthHelper.GetUserId(_context.User);
+
                 var dirs = await _cloudManager.Directories.Query.Where(nameof(DirectoryModel.Id), cloudInput.TargetId).ExecuteAsync();
                 var dir = dirs.FirstOrDefault();
 
-                FileEntry
+                if (dir == null) return null!;
+
+                string trustedName = _fileArchiver.CreateTrustedName(userId, dir.UntrustedName, dir.Id);
+                string path = _fileArchiver.CreateFilePath(trustedName);
+                await _fileArchiver.CreateTempZipFileAsync(userId, path, connectionId, dir);
+
+                return path;
             }
+
+            return null!;
         }
     }
 }

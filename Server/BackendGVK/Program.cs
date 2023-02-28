@@ -17,6 +17,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Configuration.AddUserSecrets<Program>();
+
+string contentRootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "cloudGVK", "storage");
+if (!Directory.Exists(contentRootPath)) Directory.CreateDirectory(contentRootPath);
+builder.Environment.ContentRootPath = contentRootPath;
+
 var issuer = builder.Configuration.GetSection("JwtSettings:Issuer").Value;
 var audience = builder.Configuration.GetSection("JwtSettings:Audience").Value;
 var secretKey = builder.Configuration.GetSection("JwtSettings:SecretKey").Value;
