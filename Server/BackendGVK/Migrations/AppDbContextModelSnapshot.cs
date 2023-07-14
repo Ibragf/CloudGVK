@@ -106,6 +106,78 @@ namespace BackendGVK.Migrations
                     b.ToTable("Tokens");
                 });
 
+            modelBuilder.Entity("BackendGVK.Models.DirectoryModel", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CloudPath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UntrustedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("isAdded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("isShared")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("DirectoryModel");
+                });
+
+            modelBuilder.Entity("BackendGVK.Models.FileModel", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CloudPath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MD5Hash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("Size")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TrustedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UntrustedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("isAdded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("isShared")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("FileModel");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -245,6 +317,20 @@ namespace BackendGVK.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BackendGVK.Models.DirectoryModel", b =>
+                {
+                    b.HasOne("BackendGVK.Models.ApplicationUser", null)
+                        .WithMany("SharedDirectories")
+                        .HasForeignKey("ApplicationUserId");
+                });
+
+            modelBuilder.Entity("BackendGVK.Models.FileModel", b =>
+                {
+                    b.HasOne("BackendGVK.Models.ApplicationUser", null)
+                        .WithMany("SharedFiles")
+                        .HasForeignKey("ApplicationUserId");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -299,6 +385,10 @@ namespace BackendGVK.Migrations
             modelBuilder.Entity("BackendGVK.Models.ApplicationUser", b =>
                 {
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("SharedDirectories");
+
+                    b.Navigation("SharedFiles");
                 });
 #pragma warning restore 612, 618
         }

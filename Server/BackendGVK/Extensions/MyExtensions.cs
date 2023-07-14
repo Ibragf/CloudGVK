@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using BackendGVK.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Neo4jClient;
 using System.Text;
 
 namespace BackendGVK.Extensions
@@ -36,6 +38,29 @@ namespace BackendGVK.Extensions
         {
             app.UseMiddleware<TokenManagerMiddleware>();
             return app;
+        }
+
+        public static async Task CreateConstraintsIfNotExistsAsync(this BoltGraphClient boltClient)
+        {
+            string userType = "User";
+            string dirType = ElementTypes.Directory.ToString();
+            string fileType = ElementTypes.File.ToString();
+            string invitationType = "INVITED";
+
+            var graphConstraints = new GraphConstraints(boltClient.Cypher);
+
+            graphConstraints.AddUniqueConstraint(userType, nameof(ApplicationUser.Email));
+            graphConstraints.AddUniqueConstraint(userType, nameof(ApplicationUser.Id));
+
+            graphConstraints.AddUniqueConstraint(invitationType, nameof(InvitationModel.Id));
+
+            graphConstraints.AddUniqueConstraint(dirType, nameof(DirectoryModel.Id));
+
+            graphConstraints.AddUniqueConstraint(fileType, nameof(FileModel.Id));
+            graphConstraints.AddUniqueConstraint(fileType, nameof(FileModel.CrcHash));
+            graphConstraints.AddUniqueConstraint(fileType, nameof(FileModel.TrustedName));
+
+            await graphConstraints.ExecuteAsync();
         }
     }
 }
