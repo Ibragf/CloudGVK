@@ -104,7 +104,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
-    endpoints.MapHub<ProgressLoadingHub>("/progress");
+    endpoints.MapHub<ProgressLoadingHub>("api/progress");
 });
 
 app.Run();
