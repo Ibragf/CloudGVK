@@ -1,0 +1,61 @@
+
+.popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1000;
+    height: 20rem;
+    width: 250px;
+
+    background-color: var(--light-grey);
+
+    border-radius: 20px;
+    transform: translate(-50%, -50%);
+
+    font-size: 1rem;
+}
+
+.popup-container {
+    height: 100%;
+    padding: 15px;
+}
+
+.popup-form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.popup-label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.close-icon {
+    text-align: end;
+    font-size: 1.2rem;
+}
+
+.close-icon {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+
+    transition: .3s linear;
+}
+
+.close-icon:hover{
+    cursor: pointer;
+    transform: scale(1.2) translateY(-2px);
+}
+
+.signIn-popup {
+    height: 250px;
+}
+
+.signUp-popup {
+    height: 300px;
+}
+

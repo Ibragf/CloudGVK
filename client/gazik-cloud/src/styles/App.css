@@ -1,0 +1,68 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-size: 16px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+:root {
+  --grey: #696b76;
+  --light-grey: #e5eaf1;
+  --yellow: #ffdc60;
+  --white: #fff;
+}
+
+.App {
+  height: 100vh;
+  padding: 20px;
+  padding-top: 40px;
+  background: var(--light-grey);
+}
+
+/* Shadow */
+.shadow {
+  box-shadow: 1px 1px 10px rgb(205, 205, 205);
+}
+
+/* Active */
+.active {
+  background: var(--light-grey);
+}
+
+/* Display*/
+.dis-none {
+  display: none;
+}
+
+.dis-block {
+  display: block;
+}
+
+.invisible {
+  opacity: 0;
+}
+
+/* ================= */
+/* svg */
+/* ================= */
+
+.sidebar-btn-svg {
+  position: absolute;
+  top: 10px;
+  left: 7px;
+  font-size: 20px;
+}
+
+.big-svg {
+  font-size: 25px;
+}
